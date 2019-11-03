@@ -35,40 +35,20 @@ class Square
   def to_s
     symbol
   end
-end
 
-class Line
-  attr_accessor :squares
-
-  def initialize squares
-    @squares = squares
-  end
-
-  # filled with any marker?
-  def full?
-    squares.all? { |s| !!s.marker }
-  end
-
-  # full and taken by one player
-  def taken?
-    head, *rest = squares
-    return false if head.empty?
-
-    rest.all? { |s| s.marker == head.marker }
-  end
-
-  # return empty squares
-  def empty
-    squares.select { |s| s.empty? }
-  end
-
-  def marker
-    return if !taken?
-    squares.first.marker
+  def marker=(symbol)
+    # TODO if @marker is set raise error
+    @marker = symbol
   end
 end
 
 class Board
+  WINNING_lINES = [
+    [1, 4, 7], [2, 5, 8], [3, 6, 9],
+    [1, 2, 3], [4, 5, 6], [7, 8, 9],
+    [1, 5, 9], [7, 5, 3]
+  ]
+
   attr_reader :squares, :lines, :lv, :cv, :rv, :th, :ch, :bh, :dd, :ud
 
   # note: no need for write access for squares hash
@@ -77,22 +57,35 @@ class Board
   def initialize
     @squares = {}
     reset
-
-    # container of named squares
-    # left_vertical, center_vertical, right_vertical, etc
-    @lv = Line.new [squares[1], squares[4], squares[7]]
-    @cv = Line.new [squares[2], squares[5], squares[8]]
-    @rv = Line.new [squares[3], squares[6], squares[9]]
-
-    @th = Line.new [squares[1], squares[2], squares[3]]
-    @ch = Line.new [squares[4], squares[5], squares[6]]
-    @bh = Line.new [squares[7], squares[8], squares[9]]
-
-    @dd = Line.new [squares[1], squares[5], squares[9]]
-    @ud = Line.new [squares[7], squares[5], squares[3]]
-
-    @lines = [lv, cv, rv, th, ch, bh, dd, ud]
   end
+
+  # accessor of named squares
+  # left_vertical, center_vertical, right_vertical, etc
+  def lines
+    [lv, cv, rv, th, ch, bh, dd, ud]
+  end
+
+  def liner *args
+    squares.values_at *args
+  end
+
+  def lv
+    liner 1, 4, 7
+  end
+
+  def cv
+    liner 2, 5, 8
+  end
+
+  def rv
+    liner 3, 6, 9
+  end
+
+  def th; liner 1, 2, 3; end
+  def ch; liner 4, 5, 6; end
+  def bh; liner 7, 8, 9; end
+  def dd; liner 1, 5, 9; end
+  def ud; liner 7, 5, 3; end
 
   def reset
     (1..9).each { |key| @squares[key] = Square.new }
@@ -121,33 +114,29 @@ class Board
   end
 
   def full?
-    lv.full? && cv.full? && rv.full?
+    squares.all? { |_, square| !square.empty? }
   end
 
   def line_formed?
-    lines.any?(&:taken?)
+    line_formed.any?
   end
 
   def line_formed
-    lines.select(&:taken?)
+    lines.select do |line|
+      square1 = line.first
+      next if square1.empty?
+      line.all? { |square| square.marker == square1.marker }
+    end
   end
 
   def [](key)
     squares[key]
   end
 
-  def []=(key, val)
-    @squares[key] = val
-  end
-
   # return [] of empty squares
   # grid indexed by int 1..9, left..right, top..bottom
   def unmarked_square_keys
     squares.select { |_, val| val.empty? }.keys
-  end
-
-  def someone_won?
-    line_formed.empty? ? false : true
   end
 
   private
@@ -162,7 +151,7 @@ class Player
     ensure_name
   end
 
-  def move(board)
+  def choose(board)
   end
 
   protected
@@ -170,7 +159,7 @@ class Player
 end
 
 class Human < Player
-  def move(board)
+  def choose(board)
     # display choices
     choices = board.unmarked_square_keys
     choice = nil
@@ -181,8 +170,6 @@ class Human < Player
       choice = gets.chomp.to_i
       break choice if choices.include? choice
     end
-
-    board[choice].x!
   end
 
   private
@@ -205,42 +192,48 @@ class Human < Player
 end
 
 class Computer < Player
-  def move board
+  def choose board
     choice = board.unmarked_square_keys.sample
-    board[choice].o!
   end
 
   private
   def ensure_name
     if @name.empty?
-      @name = %w[Alpha Bravo Charlie Delta Echo].sample + ' AI'
+      @name = %w[Alpha Bravo Charlie Delta Echo].sample.prepend 'AI_'
     end
   end
 end
 
 class TTTGame
+  attr_reader :board
+
   def initialize
     @human = Human.new Square::X
     @computer = Computer.new Square::O
     ensure_different_symbols
+    @board = Board.new
   end
 
   def play
-    board = Board.new
-
+    display_welcome
     loop do
-      display_welcome
-      board.display
+      loop do
+        clear
+        board.display
+        board.display
 
-      human.move board
-      break if board.someone_won? || board.line_formed?
+        human_move
+        break if board.full? || board.line_formed?
 
-      computer.move board
-      break if board.someone_won? || board.line_formed?
+        computer_move
+        break if board.full? || board.line_formed?
+      end
+      break if play_again?
+      puts "Let's play again?"
     end
 
     board.display
-    winner = who_won?(board)
+    winner = who_won?
     display_result(winner)
     display_goodbye
   end
@@ -248,6 +241,22 @@ class TTTGame
   private
 
   attr_reader :human, :computer
+
+  def clear
+    system 'clear' || system 'cls'
+  end
+
+  def human_move
+    choice = human.choose board
+    # FIXME board[choice] = human.symbol
+    board[choice].x!
+  end
+
+  def computer_move
+    choice = computer.choose board
+    # FIXME board[choice] = computer.symbol
+    board[choice].o!
+  end
 
   def display_result(winner)
     case winner
@@ -262,14 +271,13 @@ class TTTGame
 
   # NOTE tradeoff of Player class as collaborator for Board
   # Board can return the player who won
-  def who_won?(board)
-    sym = board.line_formed.first.marker
+  def who_won?
+    return :TIE if board.line_formed.empty?
+    sym = board.line_formed.first.first.marker
     if human.symbol == sym
       human
     elsif computer.symbol == sym
       computer
-    else
-      :TIE
     end
   end
 #  def prompt(msg = '')
