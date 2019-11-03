@@ -69,49 +69,55 @@ class Line
 end
 
 class Board
-  attr_reader :grid, :lines, :lv, :cv, :rv, :th, :ch, :bh, :dd, :ud
+  attr_reader :squares, :lines, :lv, :cv, :rv, :th, :ch, :bh, :dd, :ud
 
-  # note: no need for write access for grid
+  # note: no need for write access for squares hash
   # only read and write once for square marker
-  # attr_accessor :grid
 
   def initialize
-    # matrix of squares
-    @grid = Array.new(3) { |i| Array.new(3) { |j| Square.new }}
+    @squares = {}
+    reset
 
     # container of named squares
     # left_vertical, center_vertical, right_vertical, etc
-    @lv = Line.new Array.new(3) { |i| grid[i][0] }
-    @cv = Line.new Array.new(3) { |i| grid[i][1] }
-    @rv = Line.new Array.new(3) { |i| grid[i][2] }
+    @lv = Line.new [squares[1], squares[4], squares[7]]
+    @cv = Line.new [squares[2], squares[5], squares[8]]
+    @rv = Line.new [squares[3], squares[6], squares[9]]
 
-    @th = Line.new Array.new(3) { |i| grid[0][i] }
-    @ch = Line.new Array.new(3) { |i| grid[1][i] }
-    @bh = Line.new Array.new(3) { |i| grid[2][i] }
+    @th = Line.new [squares[1], squares[2], squares[3]]
+    @ch = Line.new [squares[4], squares[5], squares[6]]
+    @bh = Line.new [squares[7], squares[8], squares[9]]
 
-    @dd = Line.new [grid[0][0], grid[1][1], grid[2][2]]
-    @ud = Line.new [grid[2][0], grid[1][1], grid[0][2]]
+    @dd = Line.new [squares[1], squares[5], squares[9]]
+    @ud = Line.new [squares[7], squares[5], squares[3]]
 
     @lines = [lv, cv, rv, th, ch, bh, dd, ud]
   end
 
+  def reset
+    (1..9).each { |key| @squares[key] = Square.new }
+  end
+
   def display
-    puts "     |     |"
-    puts "     |     |"
-    puts "  #{grid[0][0]}  |  #{grid[0][1]}  |  #{grid[0][2]}"
-    puts "     |     |"
-    puts "-----+-----+-----"
-    puts "     |     |"
-    puts "     |     |"
-    puts "  #{grid[1][0]}  |  #{grid[1][1]}  |  #{grid[1][2]}"
-    puts "     |     |"
-    puts "     |     |"
-    puts "-----+-----+-----"
-    puts "     |     |"
-    puts "     |     |"
-    puts "  #{grid[2][0]}  |  #{grid[2][1]}  |  #{grid[2][2]}"
-    puts "     |     |"
-    puts "     |     |"
+    puts "+-----+-----+-----+"
+    puts "1     2     3     |"
+    puts "|     |     |     |"
+    puts "|  #{squares[1]}  |  #{squares[2]}  |  #{squares[3]}  |"
+    puts "|     |     |     |"
+    puts "|     |     |     |"
+    puts "+-----+-----+-----+"
+    puts "4     5     6     |"
+    puts "|     |     |     |"
+    puts "|  #{squares[4]}  |  #{squares[5]}  |  #{squares[6]}  |"
+    puts "|     |     |     |"
+    puts "|     |     |     |"
+    puts "+-----+-----+-----"
+    puts "7     8     9     |"
+    puts "|     |     |     |"
+    puts "|  #{squares[7]}  |  #{squares[8]}  |  #{squares[9]}  |"
+    puts "|     |     |     |"
+    puts "|     |     |     |"
+    puts "+-----+-----+-----+"
   end
 
   def full?
@@ -126,30 +132,18 @@ class Board
     lines.select(&:taken?)
   end
 
-  # return square
-  def xy(x, y)
-    grid[x][y]
+  def [](key)
+    squares[key]
   end
 
-  def [](idx)
-    x, y = to_coord idx
-    grid.dig(x, y)
-  end
-
-  def []=(idx, val)
-    x, y = to_coord idx
-    grid[x][y] = val
+  def []=(key, val)
+    @squares[key] = val
   end
 
   # return [] of empty squares
   # grid indexed by int 1..9, left..right, top..bottom
-  def choices
-    empty_ones = grid.map { |row| row.map { |square| square.empty? }}
-    number = empty_ones.flatten.each_with_index.map do |bool, idx|
-      idx.next if bool
-    end
-
-    number.reject(&:nil?)
+  def unmarked_square_keys
+    squares.select { |_, val| val.empty? }.keys
   end
 
   def someone_won?
@@ -157,40 +151,6 @@ class Board
   end
 
   private
-
-  # return an int index of an x, y coordinate
-  def to_index(x, y)
-    # FIXME assuming 3x3 matrix
-    @lookup = {
-      [0, 0] => 1,
-      [0, 1] => 2,
-      [0, 2] => 3,
-      [1, 0] => 4,
-      [1, 1] => 5,
-      [1, 2] => 6,
-      [2, 0] => 7,
-      [2, 1] => 8,
-      [2, 2] => 9
-    }
-    @lookup[[x, y]]
-  end
-
-  # return a pair of x,y coordinates for a given idx
-  def to_coord(idx)
-    # TODO optimize
-    @lookup = {
-      [0, 0] => 1,
-      [0, 1] => 2,
-      [0, 2] => 3,
-      [1, 0] => 4,
-      [1, 1] => 5,
-      [1, 2] => 6,
-      [2, 0] => 7,
-      [2, 1] => 8,
-      [2, 2] => 9
-    }
-    @lookup.invert[idx]
-  end
 end
 
 class Player
@@ -212,7 +172,7 @@ end
 class Human < Player
   def move(board)
     # display choices
-    choices = board.choices
+    choices = board.unmarked_square_keys
     choice = nil
     loop do
       print 'Please pick a square : '
@@ -246,7 +206,7 @@ end
 
 class Computer < Player
   def move board
-    choice = board.choices.sample
+    choice = board.unmarked_square_keys.sample
     board[choice].o!
   end
 
