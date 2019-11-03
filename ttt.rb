@@ -6,30 +6,30 @@ class Square
   EMPTY = ' '
   SYMBOLS = [X, O].freeze
 
-  attr_reader :mark
+  attr_reader :marker
 
-  def initialize(mark = nil)
-    @mark = mark # Square::X, O, or nil
+  def initialize(marker = nil)
+    @marker = marker # Square::X, O, or nil
   end
 
   def empty?
-    !mark
+    !marker
   end
 
   def x!
-    @mark = Square::X if mark.nil?
+    @marker = Square::X if marker.nil?
 
     # TODO otherwise, raise SquareAlreadyMarked
   end
 
   def o!
-    @mark = Square::O if mark.nil?
+    @marker = Square::O if marker.nil?
 
     # TODO otherwise, raise SquareAlreadyMarked
   end
 
   def symbol
-    mark || Square::EMPTY
+    marker || Square::EMPTY
   end
 
   def to_s
@@ -44,9 +44,9 @@ class Line
     @squares = squares
   end
 
-  # filled with any mark?
+  # filled with any marker?
   def full?
-    squares.all? { |s| !!s.mark }
+    squares.all? { |s| !!s.marker }
   end
 
   # full and taken by one player
@@ -54,7 +54,7 @@ class Line
     head, *rest = squares
     return false if head.empty?
 
-    rest.all? { |s| s.mark == head.mark }
+    rest.all? { |s| s.marker == head.marker }
   end
 
   # return empty squares
@@ -62,9 +62,9 @@ class Line
     squares.select { |s| s.empty? }
   end
 
-  def mark
+  def marker
     return if !taken?
-    squares.first.mark
+    squares.first.marker
   end
 end
 
@@ -72,7 +72,7 @@ class Board
   attr_reader :grid, :lines, :lv, :cv, :rv, :th, :ch, :bh, :dd, :ud
 
   # note: no need for write access for grid
-  # only read and write once for square marks
+  # only read and write once for square marker
   # attr_accessor :grid
 
   def initialize
@@ -303,7 +303,7 @@ class TTTGame
   # NOTE tradeoff of Player class as collaborator for Board
   # Board can return the player who won
   def who_won?(board)
-    sym = board.line_formed.first.mark
+    sym = board.line_formed.first.marker
     if human.symbol == sym
       human
     elsif computer.symbol == sym
@@ -336,10 +336,10 @@ end
 if __FILE__ == $PROGRAM_NAME
   # b = Board.new
   # p b[1].x!
-  # p b[1].mark
+  # p b[1].marker
   # p b[1]
   # p b[9].o!
-  # p b[9].mark
+  # p b[9].marker
   # p b.choices
   # b.display
   # print 'board full? '
