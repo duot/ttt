@@ -65,25 +65,14 @@ class Board
     [lv, cv, rv, th, ch, bh, dd, ud]
   end
 
-  def liner *args
-    squares.values_at *args
-  end
-
-  def lv
-    liner 1, 4, 7
-  end
-
-  def cv
-    liner 2, 5, 8
-  end
-
-  def rv
-    liner 3, 6, 9
-  end
+  def lv; liner 1, 4, 7; end
+  def cv; liner 2, 5, 8; end
+  def rv; liner 3, 6, 9; end
 
   def th; liner 1, 2, 3; end
   def ch; liner 4, 5, 6; end
   def bh; liner 7, 8, 9; end
+
   def dd; liner 1, 5, 9; end
   def ud; liner 7, 5, 3; end
 
@@ -93,25 +82,25 @@ class Board
 
   def to_s
     [
-      "+-----+-----+-----+",
-      "1     2     3     |",
-      "|     |     |     |",
-      "|  #{squares[1]}  |  #{squares[2]}  |  #{squares[3]}  |",
-      "|     |     |     |",
-      "|     |     |     |",
-      "+-----+-----+-----+",
-      "4     5     6     |",
-      "|     |     |     |",
-      "|  #{squares[4]}  |  #{squares[5]}  |  #{squares[6]}  |",
-      "|     |     |     |",
-      "|     |     |     |",
-      "+-----+-----+-----+",
-      "7     8     9     |",
-      "|     |     |     |",
-      "|  #{squares[7]}  |  #{squares[8]}  |  #{squares[9]}  |",
-      "|     |     |     |",
-      "|     |     |     |",
-      "+-----+-----+-----+"
+      "+---------+---------+---------+",
+      "1         2         3         |",
+      "|         |         |         |",
+      "|    #{squares[1]}    |    #{squares[2]}    |    #{squares[3]}    |",
+      "|         |         |         |",
+      "|         |         |         |",
+      "+---------+---------+---------+",
+      "4         5         6         |",
+      "|         |         |         |",
+      "|    #{squares[4]}    |    #{squares[5]}    |    #{squares[6]}    |",
+      "|         |         |         |",
+      "|         |         |         |",
+      "+---------+---------+---------+",
+      "7         8         9         |",
+      "|         |         |         |",
+      "|    #{squares[7]}    |    #{squares[8]}    |    #{squares[9]}    |",
+      "|         |         |         |",
+      "|         |         |         |",
+      "+---------+---------+---------+"
     ].join "\n"
   end
 
@@ -142,6 +131,10 @@ class Board
   end
 
   private
+
+  def liner *args
+    squares.values_at *args
+  end
 end
 
 class Player
