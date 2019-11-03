@@ -91,26 +91,28 @@ class Board
     (1..9).each { |key| @squares[key] = Square.new }
   end
 
-  def display
-    puts "+-----+-----+-----+"
-    puts "1     2     3     |"
-    puts "|     |     |     |"
-    puts "|  #{squares[1]}  |  #{squares[2]}  |  #{squares[3]}  |"
-    puts "|     |     |     |"
-    puts "|     |     |     |"
-    puts "+-----+-----+-----+"
-    puts "4     5     6     |"
-    puts "|     |     |     |"
-    puts "|  #{squares[4]}  |  #{squares[5]}  |  #{squares[6]}  |"
-    puts "|     |     |     |"
-    puts "|     |     |     |"
-    puts "+-----+-----+-----"
-    puts "7     8     9     |"
-    puts "|     |     |     |"
-    puts "|  #{squares[7]}  |  #{squares[8]}  |  #{squares[9]}  |"
-    puts "|     |     |     |"
-    puts "|     |     |     |"
-    puts "+-----+-----+-----+"
+  def to_s
+    [
+      "+-----+-----+-----+",
+      "1     2     3     |",
+      "|     |     |     |",
+      "|  #{squares[1]}  |  #{squares[2]}  |  #{squares[3]}  |",
+      "|     |     |     |",
+      "|     |     |     |",
+      "+-----+-----+-----+",
+      "4     5     6     |",
+      "|     |     |     |",
+      "|  #{squares[4]}  |  #{squares[5]}  |  #{squares[6]}  |",
+      "|     |     |     |",
+      "|     |     |     |",
+      "+-----+-----+-----+",
+      "7     8     9     |",
+      "|     |     |     |",
+      "|  #{squares[7]}  |  #{squares[8]}  |  #{squares[9]}  |",
+      "|     |     |     |",
+      "|     |     |     |",
+      "+-----+-----+-----+"
+    ].join "\n"
   end
 
   def full?
@@ -164,9 +166,9 @@ class Human < Player
     choices = board.unmarked_square_keys
     choice = nil
     loop do
-      print 'Please pick a square : '
+      print 'Please pick a square: '
       print choices
-      puts
+      print ?\s
       choice = gets.chomp.to_i
       break choice if choices.include? choice
     end
@@ -208,6 +210,7 @@ class TTTGame
   attr_reader :board
 
   def initialize
+    clear
     @human = Human.new Square::X
     @computer = Computer.new Square::O
     ensure_different_symbols
@@ -216,11 +219,13 @@ class TTTGame
 
   def play
     display_welcome
+    do_clear = false
     loop do
+      board.reset
       loop do
-        clear
-        board.display
-        board.display
+        clear if do_clear
+        do_clear = true
+        puts board
 
         human_move
         break if board.full? || board.line_formed?
@@ -228,22 +233,36 @@ class TTTGame
         computer_move
         break if board.full? || board.line_formed?
       end
-      break if play_again?
-      puts "Let's play again?"
-    end
+      clear if do_clear
+      puts board
+      winner = who_won?
+      display_result(winner)
 
-    board.display
-    winner = who_won?
-    display_result(winner)
-    display_goodbye
+      break unless play_again?
+      clear
+      do_clear = false
+      puts "Let's play again!"
+    end
+   display_goodbye
   end
 
   private
 
   attr_reader :human, :computer
 
+  def play_again?
+    choice = nil
+    loop do
+      print 'Do you want to play again? (y/n) '
+      choice = gets.chomp.downcase[0]
+      break if ['y', 'n'].include? choice
+    end
+
+    choice == 'y'
+  end
+
   def clear
-    system 'clear' || system 'cls'
+    system('clear') || system('cls')
   end
 
   def human_move
