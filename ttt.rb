@@ -213,30 +213,27 @@ class TTTGame
   end
 
   def play
+    clear
     display_welcome
-    do_clear = false
-    loop do
-      board.reset
-      loop do
-        clear if do_clear
-        do_clear = true
-        puts board
 
+    loop do
+      display_board
+
+      loop do
         human_move
         break if board.full? || board.line_formed?
 
         computer_move
         break if board.full? || board.line_formed?
+
+        clear_screen_and_display_board
       end
-      clear if do_clear
-      puts board
-      winner = who_won?
-      display_result(winner)
+
+      display_result(who_won?)
 
       break unless play_again?
-      clear
-      do_clear = false
-      puts "Let's play again!"
+      reset
+      display_play_again
     end
     display_goodbye
   end
@@ -244,6 +241,27 @@ class TTTGame
   private
 
   attr_reader :human, :computer, :board
+
+  def reset
+    board.reset
+    clear
+  end
+
+  def display_board
+    puts board
+    puts
+  end
+
+  def clear_screen_and_display_board
+    clear
+    puts
+    display_board
+  end
+
+  def display_play_again
+    puts "Let's play again!"
+    puts
+  end
 
   def play_again?
     choice = nil
