@@ -2,6 +2,9 @@ require 'pry'
 
 # TODO namespace
 
+class IllegalBoardStateError < RuntimeError
+end
+
 class Square
   X = 'X'
   O = 'O'
@@ -52,7 +55,6 @@ class Board
   def initialize(squares = {})
     @squares = squares
     reset if squares.empty?
-    p squares
   end
 
   # accessor of named squares
@@ -239,6 +241,7 @@ class TTTGame
   attr_accessor :current_player
 
   def current_player_moves
+    squares_state_snapshot = board.squares.map(&:inspect)
     if human_turn?
       human_move
       @current_player = computer
@@ -246,6 +249,17 @@ class TTTGame
       computer_move
       @current_player = human
     end
+
+    # delta is the mount of squares changed
+    delta = difference(squares_state_snapshot, board.squares.map(&:inspect))
+    msg = "Only one square has to be changed per turn"
+    raise IllegalBoardStateError, msg unless delta == 1
+
+    # TODO rescue
+  end
+
+  def difference(old, new)
+    (old - new).count
   end
 
   def human_turn?
@@ -291,12 +305,14 @@ class TTTGame
   end
 
   def human_move
+    # TODO raise error if human used other marker
     choice = human.choose board
     # TODO board[choice] = human.symbol
     board[choice].x!
   end
 
   def computer_move
+    # TODO raise error if computer used other marker
     choice = computer.choose board
     board[choice].o!
   end
