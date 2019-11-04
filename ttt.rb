@@ -47,11 +47,11 @@ class Square
 end
 
 class Board
-  WINNING_LINES = [
-    [1, 4, 7], [2, 5, 8], [3, 6, 9],
-    [1, 2, 3], [4, 5, 6], [7, 8, 9],
-    [1, 5, 9], [7, 5, 3]
-  ]
+  # WINNING_LINES = [
+  #   [1, 4, 7], [2, 5, 8], [3, 6, 9],
+  #   [1, 2, 3], [4, 5, 6], [7, 8, 9],
+  #   [1, 5, 9], [7, 5, 3]
+  # ]
 
   attr_reader :squares, :lines, :lv, :cv, :rv, :th, :ch, :bh, :dd, :ud
 
@@ -84,29 +84,7 @@ class Board
     (1..9).each { |key| @squares[key] = Square.new }
   end
 
-  def to_s
-    [
-      "+---------+---------+---------+",
-      "1         2         3         |",
-      "|         |         |         |",
-      "|    #{squares[1]}    |    #{squares[2]}    |    #{squares[3]}    |",
-      "|         |         |         |",
-      "|         |         |         |",
-      "+---------+---------+---------+",
-      "4         5         6         |",
-      "|         |         |         |",
-      "|    #{squares[4]}    |    #{squares[5]}    |    #{squares[6]}    |",
-      "|         |         |         |",
-      "|         |         |         |",
-      "+---------+---------+---------+",
-      "7         8         9         |",
-      "|         |         |         |",
-      "|    #{squares[7]}    |    #{squares[8]}    |    #{squares[9]}    |",
-      "|         |         |         |",
-      "|         |         |         |",
-      "+---------+---------+---------+"
-    ].join "\n"
-  end
+  def to_s; grid; end
 
   def full?
     squares.all? { |_, square| !square.empty? }
@@ -138,6 +116,30 @@ class Board
 
   def liner(*args)
     squares.values_at(*args)
+  end
+
+  def grid
+    <<GRID
+ +---------+---------+---------+
+ 1         2         3         |
+ |         |         |         |
+ |    #{squares[1]}    |    #{squares[2]}    |    #{squares[3]}    |
+ |         |         |         |
+ |         |         |         |
+ +---------+---------+---------+
+ 4         5         6         |
+ |         |         |         |
+ |    #{squares[4]}    |    #{squares[5]}    |    #{squares[6]}    |
+ |         |         |         |
+ |         |         |         |
+ +---------+---------+---------+
+ 7         8         9         |
+ |         |         |         |
+ |    #{squares[7]}    |    #{squares[8]}    |    #{squares[9]}    |
+ |         |         |         |
+ |         |         |         |
+ +---------+---------+---------+
+GRID
   end
 end
 
