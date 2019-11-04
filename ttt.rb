@@ -1,10 +1,12 @@
 require 'pry'
 
+# TODO namespace
+
 class Square
   X = 'X'
   O = 'O'
   EMPTY = ' '
-  SYMBOLS = [X, O].freeze
+  # SYMBOLS = [X, O].freeze
 
   attr_reader :marker
 
@@ -47,9 +49,10 @@ class Board
   # note: no need for write access for squares hash
   # only read and write once for square marker
 
-  def initialize
-    @squares = {}
-    reset
+  def initialize(squares = {})
+    @squares = squares
+    reset if squares.empty?
+    p squares
   end
 
   # accessor of named squares
@@ -199,10 +202,12 @@ class Computer < Player
 end
 
 class TTTGame
+  HUMAN_MARKER = 'X'
+  COMPUTER_MARKER = 'O'
   def initialize
     clear
-    @human = Human.new Square::X
-    @computer = Computer.new Square::O
+    @human = Human.new HUMAN_MARKER
+    @computer = Computer.new COMPUTER_MARKER
     @board = Board.new
     @current_player = human
   end
@@ -287,13 +292,12 @@ class TTTGame
 
   def human_move
     choice = human.choose board
-    # FIXME board[choice] = human.symbol
+    # TODO board[choice] = human.symbol
     board[choice].x!
   end
 
   def computer_move
     choice = computer.choose board
-    # FIXME board[choice] = computer.symbol
     board[choice].o!
   end
 
