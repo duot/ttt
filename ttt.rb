@@ -36,14 +36,18 @@ class Square
     symbol
   end
 
-  def marker=(symbol)
-    # TODO if @marker is set raise error
-    @marker = symbol
-  end
+  private
+
+  attr_writer :marker
+
+  # def marker=(symbol)
+  #   # TODO if @marker is set raise error
+  #   @marker = symbol
+  # end
 end
 
 class Board
-  WINNING_lINES = [
+  WINNING_LINES = [
     [1, 4, 7], [2, 5, 8], [3, 6, 9],
     [1, 2, 3], [4, 5, 6], [7, 8, 9],
     [1, 5, 9], [7, 5, 3]
@@ -132,24 +136,24 @@ class Board
 
   private
 
-  def liner *args
-    squares.values_at *args
+  def liner(*args)
+    squares.values_at(*args)
   end
 end
 
 class Player
   attr_reader :symbol, :name
 
-  def initialize(name = '', symbol)
+  def initialize(symbol, name = '')
     @name = name
     @symbol = symbol
     ensure_name
   end
 
-  def choose(board)
-  end
+  def choose(board); end
 
   protected
+
   attr_writer :name
 end
 
@@ -161,7 +165,7 @@ class Human < Player
     loop do
       print 'Please pick a square: '
       print choices
-      print ?\s
+      print ' '
       choice = gets.chomp.to_i
       break choice if choices.include? choice
     end
@@ -170,12 +174,10 @@ class Human < Player
   private
 
   def ensure_name
-    if @name.empty?
-      get_name
-    end
+    ask_name if @name.empty?
   end
 
-  def get_name
+  def ask_name
     name = loop do
       print "What's your name? "
       input = gets.chomp.strip
@@ -187,21 +189,19 @@ class Human < Player
 end
 
 class Computer < Player
-  def choose board
-    choice = board.unmarked_square_keys.sample
+  def choose(board)
+    board.unmarked_square_keys.sample
   end
 
   private
+
   def ensure_name
-    if @name.empty?
-      @name = %w[Alpha Bravo Charlie Delta Echo].sample.prepend 'AI_'
-    end
+    return unless name.empty?
+    @name = %w(Alpha Bravo Charlie Delta Echo).sample.prepend 'AI_'
   end
 end
 
 class TTTGame
-  attr_reader :board
-
   def initialize
     clear
     @human = Human.new Square::X
@@ -236,12 +236,12 @@ class TTTGame
       do_clear = false
       puts "Let's play again!"
     end
-   display_goodbye
+    display_goodbye
   end
 
   private
 
-  attr_reader :human, :computer
+  attr_reader :human, :computer, :board
 
   def play_again?
     choice = nil
@@ -292,9 +292,6 @@ class TTTGame
       computer
     end
   end
-#  def prompt(msg = '')
-#    puts "TTT> #{msg}"
-#  end
 
   def display_welcome
     puts "Welcome to a game of Tic Tac Toe."
