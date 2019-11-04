@@ -39,20 +39,9 @@ class Square
   private
 
   attr_writer :marker
-
-  # def marker=(symbol)
-  #   # TODO if @marker is set raise error
-  #   @marker = symbol
-  # end
 end
 
 class Board
-  # WINNING_LINES = [
-  #   [1, 4, 7], [2, 5, 8], [3, 6, 9],
-  #   [1, 2, 3], [4, 5, 6], [7, 8, 9],
-  #   [1, 5, 9], [7, 5, 3]
-  # ]
-
   attr_reader :squares, :lines, :lv, :cv, :rv, :th, :ch, :bh, :dd, :ud
 
   # note: no need for write access for squares hash
@@ -100,6 +89,12 @@ class Board
       next if square1.empty?
       line.all? { |square| square.marker == square1.marker }
     end
+  end
+
+  def winning_marker
+    return if !line_formed?
+    line = line_formed.first
+    line.first.marker
   end
 
   def [](key)
@@ -208,8 +203,8 @@ class TTTGame
     clear
     @human = Human.new Square::X
     @computer = Computer.new Square::O
-    ensure_different_symbols
     @board = Board.new
+    @current_player = human
   end
 
   def play
@@ -220,20 +215,15 @@ class TTTGame
       display_board
 
       loop do
-        human_move
+        current_player_moves
         break if board.full? || board.line_formed?
-
-        computer_move
-        break if board.full? || board.line_formed?
-
-        clear_screen_and_display_board
+        clear_screen_and_display_board # if human_turn?
       end
 
       display_result(who_won?)
 
       break unless play_again?
       reset
-      display_play_again
     end
     display_goodbye
   end
@@ -241,10 +231,27 @@ class TTTGame
   private
 
   attr_reader :human, :computer, :board
+  attr_accessor :current_player
+
+  def current_player_moves
+    if human_turn?
+      human_move
+      @current_player = computer
+    else
+      computer_move
+      @current_player = human
+    end
+  end
+
+  def human_turn?
+    current_player == human
+  end
 
   def reset
     board.reset
     clear
+    display_play_again
+    @current_player = human
   end
 
   def display_board
@@ -291,6 +298,7 @@ class TTTGame
   end
 
   def display_result(winner)
+    clear_screen_and_display_board
     case winner
     when human
       puts "#{human.name} won."
@@ -299,13 +307,12 @@ class TTTGame
     else
       puts "It's a draw."
     end
+    puts
   end
 
-  # NOTE tradeoff of Player class as collaborator for Board
-  # Board can return the player who won
   def who_won?
-    return :TIE if board.line_formed.empty?
-    sym = board.line_formed.first.first.marker
+    return :TIE if board.winning_marker.nil?
+    sym = board.winning_marker
     if human.symbol == sym
       human
     elsif computer.symbol == sym
@@ -321,12 +328,6 @@ class TTTGame
   def display_goodbye
     puts "Thank you for playing Tic Tac Toe. Goodbye."
     puts
-  end
-
-  def ensure_different_symbols
-    # useful only if option to
-    # TODO set different sym
-    # TODO raise error if same sym set
   end
 end
 
