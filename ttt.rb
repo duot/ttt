@@ -5,6 +5,7 @@ require 'pry'
 class IllegalBoardStateError < RuntimeError; end
 class SymbolReusedError < RuntimeError; end
 class SquareAlreadyMarkedError < RuntimeError; end
+class SymbolNilError < RuntimeError; end
 
 class Square
   EMPTY = ' '
@@ -46,16 +47,14 @@ class Board
     [lv, cv, rv, th, ch, bh, dd, ud]
   end
 
-  def lv; liner 1, 4, 7; end
-  def cv; liner 2, 5, 8; end
-  def rv; liner 3, 6, 9; end
-
-  def th; liner 1, 2, 3; end
-  def ch; liner 4, 5, 6; end
-  def bh; liner 7, 8, 9; end
-
-  def dd; liner 1, 5, 9; end
-  def ud; liner 7, 5, 3; end
+  def lv; liner 1, 4, 7; end  # left      vertical
+  def cv; liner 2, 5, 8; end  # center    vertical
+  def rv; liner 3, 6, 9; end  # right     vertical
+  def th; liner 1, 2, 3; end  # top       horizontal
+  def ch; liner 4, 5, 6; end  # mid       horizontal
+  def bh; liner 7, 8, 9; end  # bottom    horizontal
+  def dd; liner 1, 5, 9; end  # downward  diagonal
+  def ud; liner 7, 5, 3; end  # upward    diagonal
 
   def reset
     (1..9).each { |key| @squares[key] = Square.new }
@@ -91,7 +90,6 @@ class Board
   end
 
   def []=(key, symbol)
-    # square.marker = symbol
     squares[key].marker = symbol
   end
 
@@ -136,30 +134,34 @@ class Player
   @@symbols = []
   attr_reader :symbol, :name
 
-  def initialize(symbol, name = '')
+  def self.symbols; @@symbols; end
+
+  def initialize(symbol, name)
     @name = name
-    @symbol = symbol
-    ensure_name
-    add_symbol symbol
+    self.symbol = symbol
   end
 
   def choose(board); end
 
-  def self.symbols; @@symbols; end
-
-  protected
-
-  attr_writer :name
+  def choose_symbol; end
 
   private
 
-  def add_symbol symbol
+  def symbol=(symbol)
+    raise SymbolNilError if symbol.nil? || symbol.empty?
     raise SymbolReusedError if @@symbols.include? symbol
+    @symbol = symbol[0]
     @@symbols << symbol
   end
 end
 
 class Human < Player
+  def initialize
+    name = ask_name
+    symbol = ask_symbol
+    super symbol, name
+  end
+
   def choose(board)
     # display choices
     choices = board.unmarked_square_keys
@@ -175,31 +177,45 @@ class Human < Player
 
   private
 
-  def ensure_name
-    ask_name if @name.empty?
-  end
-
   def ask_name
-    name = loop do
+    loop do
       print "What's your name? "
       input = gets.chomp.strip
       break input.capitalize unless input.empty?
     end
+  end
 
-    @name = name
+  def ask_symbol
+    loop do
+      print "What marker would you like to use? "
+      input = gets.chomp.strip[0]
+      break input unless input.empty? || Player.symbols.include?(input)
+      puts "#{input} is invalid."
+    end
   end
 end
 
 class Computer < Player
+  def initialize
+    super choose_symbol, choose_name
+  end
+
   def choose(board)
     intelligent_move board
   end
 
   private
 
-  def ensure_name
-    return unless name.empty?
-    @name = %w(Alpha Bravo Charlie Delta Echo).sample.prepend 'AI_'
+  def choose_name
+    %w(Alpha Bravo Charlie Delta Echo).sample.prepend 'AI_'
+  end
+
+  def choose_symbol
+    taken = Player.symbols.map(&:capitalize)
+    loop do
+      choice = ['O', 'X'].sample # NOTE limited player count
+      break choice if !taken.include? choice
+    end
   end
 
   # return choices(Integers 1..9) based on inspecting the board state
@@ -219,20 +235,16 @@ class Computer < Player
 end
 
 class TTTGame
-  HUMAN_MARKER = 'X'
-  COMPUTER_MARKER = 'O'
   def initialize(board = Board.new)
     clear
-    @human = Human.new HUMAN_MARKER
-    @computer = Computer.new COMPUTER_MARKER
+    display_welcome
+    @human = Human.new
+    @computer = Computer.new
     @board = board
     @current_player = human
   end
 
   def play
-    clear
-    display_welcome
-
     loop do
       display_board
 
@@ -241,7 +253,6 @@ class TTTGame
         break if board.full? || board.line_formed?
         clear_screen_and_display_board # if human_turn?
       end
-
       display_result(who_won?)
 
       break unless play_again?
@@ -335,7 +346,7 @@ class TTTGame
     clear_screen_and_display_board
     case winner
     when human
-      puts "#{human.name} won."
+      puts "#{human.name}, you won."
     when computer
       puts "#{computer.name} won."
     else
@@ -360,14 +371,12 @@ class TTTGame
   end
 
   def display_goodbye
-    puts "Thank you for playing Tic Tac Toe. Goodbye."
+    puts "Thank you for playing Tic Tac Toe. Goodbye #{human.name}."
     puts
   end
 end
 
-#########
-#########
-#########
+#########   #########   #########
 
 if __FILE__ == $PROGRAM_NAME
   # b = Board.new
