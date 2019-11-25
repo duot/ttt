@@ -167,9 +167,9 @@ class Human < Player
     choices = board.unmarked_square_keys
     choice = nil
     loop do
-      print 'Please pick a square: '
-      print choices
-      print ' '
+      print 'Please pick square '
+      print joinor(choices)
+      print ': '
       choice = gets.chomp.to_i
       break choice if choices.include? choice
     end
@@ -192,6 +192,15 @@ class Human < Player
       break input unless input.empty? || Player.symbols.include?(input)
       puts "#{input} is invalid."
     end
+  end
+
+  # returns a string of a collection, joined by separators and space
+  # and a conjuction
+  def joinor(coll)
+    head, *body, tail = coll
+    return head if body.empty?
+    return [head, conjunc, body].join ' ' if tail.nil?
+    "#{[head, body].join(', ')} or #{tail}"
   end
 end
 
