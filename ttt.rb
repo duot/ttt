@@ -2,48 +2,31 @@ require 'pry'
 
 # TODO namespace
 
-class IllegalBoardStateError < RuntimeError
-end
+class IllegalBoardStateError < RuntimeError; end
+class SymbolReusedError < RuntimeError; end
+class SquareAlreadyMarkedError < RuntimeError; end
 
 class Square
-  X = 'X'
-  O = 'O'
   EMPTY = ' '
-  # SYMBOLS = [X, O].freeze
 
   attr_reader :marker
 
   def initialize(marker = nil)
-    @marker = marker # Square::X, O, or nil
+    @marker = marker
   end
 
-  def empty?
-    !marker
-  end
+  def empty?; !marker; end
 
-  def x!
-    @marker = Square::X if marker.nil?
-
-    # TODO otherwise, raise SquareAlreadyMarked
-  end
-
-  def o!
-    @marker = Square::O if marker.nil?
-
-    # TODO otherwise, raise SquareAlreadyMarked
+  def marker=(marker)
+    raise SquareAlreadyMarkedError if !empty?
+    @marker = marker
   end
 
   def symbol
     marker || Square::EMPTY
   end
 
-  def to_s
-    symbol
-  end
-
-  private
-
-  attr_writer :marker
+  def to_s; symbol; end
 end
 
 class Board
@@ -76,6 +59,7 @@ class Board
 
   def reset
     (1..9).each { |key| @squares[key] = Square.new }
+    nil
   end
 
   def to_s; grid; end
@@ -103,7 +87,12 @@ class Board
   end
 
   def [](key)
-    squares[key]
+    squares[key].clone
+  end
+
+  def []=(key, symbol)
+    # square.marker = symbol
+    squares[key].marker = symbol
   end
 
   # return [] of empty squares
@@ -144,19 +133,30 @@ GRID
 end
 
 class Player
+  @@symbols = []
   attr_reader :symbol, :name
 
   def initialize(symbol, name = '')
     @name = name
     @symbol = symbol
     ensure_name
+    add_symbol symbol
   end
 
   def choose(board); end
 
+  def self.symbols; @@symbols; end
+
   protected
 
   attr_writer :name
+
+  private
+
+  def add_symbol symbol
+    raise SymbolReusedError if @@symbols.include? symbol
+    @@symbols << symbol
+  end
 end
 
 class Human < Player
@@ -192,7 +192,7 @@ end
 
 class Computer < Player
   def choose(board)
-    board.unmarked_square_keys.sample
+    intelligent_move board
   end
 
   private
@@ -201,16 +201,31 @@ class Computer < Player
     return unless name.empty?
     @name = %w(Alpha Bravo Charlie Delta Echo).sample.prepend 'AI_'
   end
+
+  # return choices(Integers 1..9) based on inspecting the board state
+  def intelligent_move(board)
+    offensive(board) || defensive(board) || random(board)
+  end
+
+  def random(board)
+    board.unmarked_square_keys.sample
+  end
+
+  def defensive(board)
+  end
+
+  def offensive(board)
+  end
 end
 
 class TTTGame
   HUMAN_MARKER = 'X'
   COMPUTER_MARKER = 'O'
-  def initialize
+  def initialize(board = Board.new)
     clear
     @human = Human.new HUMAN_MARKER
     @computer = Computer.new COMPUTER_MARKER
-    @board = Board.new
+    @board = board
     @current_player = human
   end
 
@@ -250,7 +265,7 @@ class TTTGame
       @current_player = human
     end
 
-    # delta is the mount of squares changed
+    # delta is the amount of squares changed
     delta = difference(squares_state_snapshot, board.squares.map(&:inspect))
     msg = "Only one square has to be changed per turn"
     raise IllegalBoardStateError, msg unless delta == 1
@@ -307,14 +322,13 @@ class TTTGame
   def human_move
     # TODO raise error if human used other marker
     choice = human.choose board
-    # TODO board[choice] = human.symbol
-    board[choice].x!
+    board[choice] = human.symbol
   end
 
   def computer_move
     # TODO raise error if computer used other marker
     choice = computer.choose board
-    board[choice].o!
+    board[choice] = computer.symbol
   end
 
   def display_result(winner)
@@ -350,6 +364,10 @@ class TTTGame
     puts
   end
 end
+
+#########
+#########
+#########
 
 if __FILE__ == $PROGRAM_NAME
   # b = Board.new
