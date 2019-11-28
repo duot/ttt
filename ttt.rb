@@ -244,27 +244,23 @@ class Computer < Player
 end
 
 class TTTGame
-  def initialize(board = Board.new)
+  def initialize(board = Board.new, winning_score = 5)
     clear
     display_welcome
     @human = Human.new
     @computer = Computer.new
     @board = board
     @current_player = human
+    @winning_score = winning_score
+    reset_score
   end
 
   def play
     loop do
-      display_board
-
-      loop do
-        current_player_moves
-        break if board.full? || board.line_formed?
-        clear_screen_and_display_board # if human_turn?
-      end
+      play_round
       display_result(who_won?)
-
       break unless play_again?
+      display_play_again
       reset
     end
     display_goodbye
@@ -272,8 +268,47 @@ class TTTGame
 
   private
 
-  attr_reader :human, :computer, :board
+  attr_reader :human, :computer, :board, :score
   attr_accessor :current_player
+
+  def play_round
+    reset_score
+    loop do
+      display_score_and_board
+      loop do
+        current_player_moves
+        break if board.full? || board.line_formed?
+        clear_screen_and_display_score_and_board # if human_turn?
+      end
+      keep_score who_won?
+      break if score?(@winning_score)
+      reset
+    end
+  end
+
+  # return true if any player has @score sc
+  def display_score
+    print "SCORE:   "
+    @score.each do |player, sc|
+      print "#{player.name}: #{sc}   "
+    end
+    puts
+  end
+
+  def score?(sc)
+    @score.value? sc
+  end
+
+  def keep_score(who)
+    case who
+    when human then @score[human] += 1
+    when computer then @score[computer] += 1
+    end
+  end
+
+  def reset_score
+    @score = { human => 0, computer => 0 }
+  end
 
   def current_player_moves
     squares_state_snapshot = board.squares.map(&:inspect)
@@ -304,7 +339,6 @@ class TTTGame
   def reset
     board.reset
     clear
-    display_play_again
     @current_player = human
   end
 
@@ -313,10 +347,15 @@ class TTTGame
     puts
   end
 
-  def clear_screen_and_display_board
+  def display_score_and_board
+    display_score
+    display_board
+  end
+
+  def clear_screen_and_display_score_and_board
     clear
     puts
-    display_board
+    display_score_and_board
   end
 
   def display_play_again
@@ -352,7 +391,7 @@ class TTTGame
   end
 
   def display_result(winner)
-    clear_screen_and_display_board
+    clear_screen_and_display_score_and_board
     case winner
     when human
       puts "#{human.name}, you won."
@@ -397,9 +436,9 @@ if __FILE__ == $PROGRAM_NAME
   # p b.choices
   # b.display
   # print 'board full? '
-  # p b.full?
+  # p b.full? nil, 3
   # p b.line_formed?
   # p b.line_formed
 
-  TTTGame.new.play
+  TTTGame.new(Board.new, 3).play
 end
