@@ -64,7 +64,7 @@ class Board
   end
 
   def [](key)
-    squares[key]
+    squares[key].marker
   end
 
   def []=(key, symbol)
@@ -262,6 +262,7 @@ class Computer < Player
   end
 
   def random(board)
+    return 5 if board[5].nil?
     board.unmarked_square_keys.sample
   end
 
