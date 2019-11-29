@@ -88,6 +88,14 @@ class Board
     rs.first.select(&:empty?).first.number
   end
 
+  def at_chance(marker)
+    lt = lines_with_two_marks.select do |line|
+      line.map(&:marker).any? marker
+    end
+    return if lt.empty?
+    lt.first.select(&:empty?).first.number
+  end
+
   private
 
   # a line with two same markers and an empty square
@@ -265,7 +273,9 @@ class Computer < Player
     board.at_risk symbol
   end
 
-  def offensive(board); end
+  def offensive(board)
+    board.at_chance symbol
+  end
 end
 
 class TTTGame
