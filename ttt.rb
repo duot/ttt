@@ -73,7 +73,7 @@ class Board
 
   # return [] of empty squares
   # grid indexed by int 1..9, left..right, top..bottom
-  def unmarked_square_keys
+  def unmarked_squares
     squares.select { |_, val| val.empty? }.keys
   end
 
@@ -193,7 +193,7 @@ class Human < Player
 
   def choose(board)
     # display choices
-    choices = board.unmarked_square_keys
+    choices = board.unmarked_squares
     choice = nil
     loop do
       print 'Please pick square '
@@ -226,10 +226,13 @@ class Human < Player
   # returns a string of a collection, joined by separators and space
   # and a conjuction
   def joinor(coll)
-    head, *body, tail = coll
-    return head if body.empty?
-    return [head, conjunc, body].join ' ' if tail.nil?
-    "#{[head, body].join(', ')} or #{tail}"
+    case coll.count
+    when 1 then coll[0].to_s
+    when 2 then "#{coll[0]} or #{coll[1]}"
+    else 
+      *body, tail = coll
+      "#{body.join(', ')} or #{tail}"
+    end
   end
 end
 
@@ -263,7 +266,7 @@ class Computer < Player
 
   def random(board)
     return 5 if board[5].nil?
-    board.unmarked_square_keys.sample
+    board.unmarked_squares.sample
   end
 
   # defends against immediate threat
@@ -280,13 +283,14 @@ class Computer < Player
 end
 
 class TTTGame
-  def initialize(board = Board.new, winning_score = 5)
+  def initialize(board: Board.new, winning_score: 5, who_first: 'choose')
     clear
     display_welcome
     @human = Human.new
     @computer = Computer.new
     @board = board
-    @current_player = human
+    @first_player = choose_first_player(who_first)
+    @current_player = first_player
     @winning_score = winning_score.abs
     reset_score
   end
@@ -304,7 +308,7 @@ class TTTGame
 
   private
 
-  attr_reader :human, :computer, :board, :score, :winning_score
+  attr_reader :human, :computer, :board, :score, :winning_score, :first_player
   attr_accessor :current_player
 
   def play_round
@@ -320,6 +324,23 @@ class TTTGame
       break if score?(winning_score)
       reset
     end
+  end
+
+  def choose_first_player(who_first)
+    case who_first
+    when 'choose' then choose_player
+    when 'human' then human
+    when 'computer' then computer
+    end
+  end
+
+  def choose_player
+    choice = loop do
+      print "Who should go first? (computer/human) (c/h): "
+      choice = gets.chomp[0].downcase
+      break choice if ['c', 'h'].include? choice
+    end
+    { 'c' => computer, 'h' => human }[choice]
   end
 
   # return true if any player has @score sc
@@ -375,7 +396,7 @@ class TTTGame
   def reset
     board.reset
     clear
-    @current_player = human
+    @current_player = first_player
   end
 
   def display_board
@@ -476,5 +497,5 @@ if __FILE__ == $PROGRAM_NAME
   # p b.line_formed?
   # p b.line_formed
 
-  TTTGame.new(Board.new, 3).play
+  TTTGame.new(board: Board.new, winning_score: 3).play
 end
