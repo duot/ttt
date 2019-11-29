@@ -10,10 +10,11 @@ class SymbolNilError < RuntimeError; end
 class Square
   EMPTY = ' '
 
-  attr_reader :marker
+  attr_reader :marker, :number
 
-  def initialize(marker = nil)
+  def initialize(number, marker = nil)
     @marker = marker
+    @number = number
   end
 
   def empty?; !marker; end
@@ -41,6 +42,63 @@ class Board
     reset if squares.empty?
   end
 
+  def reset
+    (1..9).each { |key| @squares[key] = Square.new(key) }
+    nil
+  end
+
+  def to_s; grid; end
+
+  def full?
+    squares.all? { |_, square| !square.empty? }
+  end
+
+  def line_formed?
+    line_formed.any?
+  end
+
+  def winning_marker
+    return if !line_formed?
+    line = line_formed.first
+    line.first.marker
+  end
+
+  def [](key)
+    squares[key]
+  end
+
+  def []=(key, symbol)
+    squares[key].marker = symbol
+  end
+
+  # return [] of empty squares
+  # grid indexed by int 1..9, left..right, top..bottom
+  def unmarked_square_keys
+    squares.select { |_, val| val.empty? }.keys
+  end
+
+  # at risk if 2 (other)markers present, 1 empty square
+  # out: playable empty square number
+  def at_risk(marker)
+    rs = lines_with_two_marks.select do |line|
+      !line.any? marker
+    end
+
+    return if rs.empty?
+    rs.first.select(&:empty?).first.number
+  end
+
+  private
+
+  # a line with two same markers and an empty square
+  # out: lines
+  def lines_with_two_marks
+    lines.select do |line|
+      markers = line.map(&:marker)
+      markers.count(&:nil?) == 1 && markers.uniq.count == 2
+    end
+  end
+
   # accessor of named squares
   # left_vertical, center_vertical, right_vertical, etc
   def lines
@@ -56,21 +114,6 @@ class Board
   def dd; liner 1, 5, 9; end  # downward  diagonal
   def ud; liner 7, 5, 3; end  # upward    diagonal
 
-  def reset
-    (1..9).each { |key| @squares[key] = Square.new }
-    nil
-  end
-
-  def to_s; grid; end
-
-  def full?
-    squares.all? { |_, square| !square.empty? }
-  end
-
-  def line_formed?
-    line_formed.any?
-  end
-
   def line_formed
     lines.select do |line|
       square1 = line.first
@@ -78,28 +121,6 @@ class Board
       line.all? { |square| square.marker == square1.marker }
     end
   end
-
-  def winning_marker
-    return if !line_formed?
-    line = line_formed.first
-    line.first.marker
-  end
-
-  def [](key)
-    squares[key].clone
-  end
-
-  def []=(key, symbol)
-    squares[key].marker = symbol
-  end
-
-  # return [] of empty squares
-  # grid indexed by int 1..9, left..right, top..bottom
-  def unmarked_square_keys
-    squares.select { |_, val| val.empty? }.keys
-  end
-
-  private
 
   def liner(*args)
     squares.values_at(*args)
@@ -236,11 +257,15 @@ class Computer < Player
     board.unmarked_square_keys.sample
   end
 
+  # defends against immediate threat
+  # 2 opponent markers present
+  # in: board
+  # out: square number
   def defensive(board)
+    board.at_risk symbol
   end
 
-  def offensive(board)
-  end
+  def offensive(board); end
 end
 
 class TTTGame
@@ -251,7 +276,7 @@ class TTTGame
     @computer = Computer.new
     @board = board
     @current_player = human
-    @winning_score = winning_score
+    @winning_score = winning_score.abs
     reset_score
   end
 
@@ -268,7 +293,7 @@ class TTTGame
 
   private
 
-  attr_reader :human, :computer, :board, :score
+  attr_reader :human, :computer, :board, :score, :winning_score
   attr_accessor :current_player
 
   def play_round
@@ -281,7 +306,7 @@ class TTTGame
         clear_screen_and_display_score_and_board # if human_turn?
       end
       keep_score who_won?
-      break if score?(@winning_score)
+      break if score?(winning_score)
       reset
     end
   end
