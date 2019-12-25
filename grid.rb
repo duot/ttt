@@ -1,20 +1,20 @@
 require 'pry'
 
 class Grid
-  def initialize(matrix, padding: 1, display_grid_numbers: true)
+  def initialize(flat_matrix, side_len, padding: 1, display_grid_numbers: true)
     @display_grid_numbers = display_grid_numbers
-    @side_len = matrix.first.size
-    @count = matrix.flatten.count
-    @matrix = matrix
+    @side_len = side_len
+    @count = flat_matrix.size
+    @flat_matrix = flat_matrix
   end
 
   def to_s
-    gridder(matrix.flatten, (1..count).to_a, side_len).join
+    gridder(flat_matrix, (1..count).to_a, side_len).join
   end
 
   private
 
-  attr_reader :matrix, :count, :side_len, :display_grid_numbers
+  attr_reader :flat_matrix, :count, :side_len, :display_grid_numbers
 
   def gridder(input_ar, grid_numbers, side_length)
     raise ArgumentError.new "#{input_ar} size must be odd" if !input_ar.size.odd?
@@ -76,14 +76,13 @@ end
 if __FILE__ == $PROGRAM_NAME
   g3 = Grid.new [['x', 'x', 'x'],
                  ['x', 'o', 'x'],
-                 ['x', 'x', 'x']], display_grid_numbers: false
+                 ['x', 'x', 'x']].flatten, 3, display_grid_numbers: false
 
   g5 = Grid.new [['x', 'x', 'x', 'x', 'x'],
                  ['x', 'x', 'o', 'x', 'x'],
                  ['x', 'o', 'o', 'o', 'x'],
                  ['x', 'x', 'o', 'x', 'x'],
-                 ['x', 'x', 'x', 'x', 'x']]
-  binding.pry
+                 ['x', 'x', 'x', 'x', 'x']].flatten, 5
   puts g3.to_s
   puts g5.to_s
 end
