@@ -9,7 +9,7 @@ class Grid
   end
 
   def to_s
-    gridder matrix.flatten, (1..count).to_a, side_len
+    gridder(matrix.flatten, (1..count).to_a, side_len).join
   end
 
   private
@@ -69,7 +69,7 @@ class Grid
       (0...cell.size).each { |i| row[i] << cell[i] }
     end
 
-    row.join "\n"
+    row.join("\n") + "\n"
   end
 end
 
@@ -83,6 +83,7 @@ if __FILE__ == $PROGRAM_NAME
                  ['x', 'o', 'o', 'o', 'x'],
                  ['x', 'x', 'o', 'x', 'x'],
                  ['x', 'x', 'x', 'x', 'x']]
+  binding.pry
   puts g3.to_s
   puts g5.to_s
 end
