@@ -1,18 +1,20 @@
 require_relative 'square.rb'
+require_relative 'grid.rb'
 
 class Board
-  attr_reader :squares, :lines, :lv, :cv, :rv, :th, :ch, :bh, :dd, :ud
+  attr_reader :side, :squares, :lines, :lv, :cv, :rv, :th, :ch, :bh, :dd, :ud
 
   # note: no need for write access for squares hash
   # only read and write once for square marker
 
-  def initialize(squares = {})
+  def initialize(squares = {}, side: 3)
+    @side = validate_side_length(side)
     @squares = squares
     reset if squares.empty?
   end
 
   def reset
-    (1..9).each { |key| @squares[key] = Square.new(key) }
+    (1..side*side).each { |key| @squares[key] = Square.new(key) }
     nil
   end
 
@@ -67,6 +69,14 @@ class Board
 
   private
 
+  # square board side must be odd, starting up from 3
+  def validate_side_length(side)
+    raise NotImplementedError.new 'Board size > 9 is not supported.' if side > 9
+
+    return side if side.odd? && side >= 3
+    raise ArgumentError.new('Side length must be odd and >= 3')
+  end
+
   # a line with two same markers and an empty square
   # out: lines
   def lines_with_two_marks
@@ -104,26 +114,33 @@ class Board
   end
 
   def grid
-    <<GRID
- +---------+---------+---------+
- 1         2         3         |
- |         |         |         |
- |    #{squares[1]}    |    #{squares[2]}    |    #{squares[3]}    |
- |         |         |         |
- |         |         |         |
- +---------+---------+---------+
- 4         5         6         |
- |         |         |         |
- |    #{squares[4]}    |    #{squares[5]}    |    #{squares[6]}    |
- |         |         |         |
- |         |         |         |
- +---------+---------+---------+
- 7         8         9         |
- |         |         |         |
- |    #{squares[7]}    |    #{squares[8]}    |    #{squares[9]}    |
- |         |         |         |
- |         |         |         |
- +---------+---------+---------+
-GRID
+    Grid.new(squares.values.map(&:symbol), side).to_s
   end
+end
+
+if __FILE__ == $PROGRAM_NAME
+  ###
+  # test board side length 3..9
+  puts true if [3, 5, 7, 9].map { |s| Board.new(side:s) }
+
+  begin
+    Board.new side:2
+  rescue ArgumentError
+    puts true
+  end
+
+  # test board display at side length 3..9
+  puts Board.new side: 9
+  puts Board.new side: 5
+  puts Board.new
+
+  begin
+    Board.new side: 11
+  rescue NotImplementedError
+    puts true
+  end
+
+  # test almost_a_line
+
+  # test
 end
