@@ -7,7 +7,7 @@ class Board
   # note: no need for write access for squares hash
   # only read and write once for square marker
 
-  def initialize(squares = {}, side: 3)
+  def initialize(squares = {}, winning_line_length, side: 3)
     @side = validate_side_length(side)
     @squares = squares
     reset if squares.empty?
@@ -121,21 +121,21 @@ end
 if __FILE__ == $PROGRAM_NAME
   ###
   # test board side length 3..9
-  puts true if [3, 5, 7, 9].map { |s| Board.new(side:s) }
+  puts true if [3, 5, 7, 9].map { |s| Board.new(3, side:s) }
 
   begin
-    Board.new side:2
+    Board.new 3, side:2
   rescue ArgumentError
     puts true
   end
 
   # test board display at side length 3..9
-  puts Board.new side: 9
-  puts Board.new side: 5
-  puts Board.new
+  puts Board.new 3, side: 5
+  puts Board.new 3
+  puts Board.new 3, side: 9
 
   begin
-    Board.new side: 11
+    Board.new 3, side: 11
   rescue NotImplementedError
     puts true
   end
