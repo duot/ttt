@@ -70,7 +70,7 @@ class Human < Player
     case coll.count
     when 1 then coll[0].to_s
     when 2 then "#{coll[0]} or #{coll[1]}"
-    else 
+    else
       *body, tail = coll
       "#{body.join(', ')} or #{tail}"
     end
