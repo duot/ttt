@@ -69,13 +69,6 @@ class Board
     lt.first.select(&:empty?).first.number
   end
 
-  # a potential line, 1+ marks and the rest are empty
-  def at_any; end
-
-  # scan for winning line, at-risk line, at-chance line
-  # goes
-  def scan; end
-
   # returns an array of arrays
   # each the length of winning_line_length
   # generate_groups_to_scan
