@@ -8,8 +8,8 @@ class Board
   # note: no need for write access for squares hash
   # only read and write once for square marker
 
-  def initialize(squares = {}, winning_line_length, side: 3)
-    @win_len = winning_line_length
+  def initialize(winning_line_length, squares = {}, side: 3)
+    @win_len = validate_winning_line_length(winning_line_length)
     @side = validate_side_length(side)
     @squares = squares
     reset if squares.empty?
@@ -70,13 +70,11 @@ class Board
   end
 
   # a potential line, 1+ marks and the rest are empty
-  def at_any
-  end
+  def at_any; end
 
   # scan for winning line, at-risk line, at-chance line
   # goes
-  def scan
-  end
+  def scan; end
 
   # returns an array of arrays
   # each the length of winning_line_length
@@ -87,16 +85,14 @@ class Board
 
   def horizontals
     # select each full groups that are between row-start and row-ends
-    h = square_numbers.each_slice(side).map do |row|
+    square_numbers.each_slice(side).flat_map do |row|
       row.each_cons(win_len).to_a
     end
-
-    h.flatten 1
   end
 
   def verticals
     v = square_numbers.each_slice(side).to_a.transpose
-    v.map { |col| col.each_cons(win_len).to_a }.flatten 1
+    v.flat_map { |col| col.each_cons(win_len).to_a }
   end
 
   def downwards
@@ -107,13 +103,9 @@ class Board
     groups = rest.unshift(first_row + extra)
 
     # reject those row end squares in the middle of the group
-    groups = groups.select do |line|
-      sub = line[0..-2]
-      sub == sub - row_end_squares
-    end
-
-    groups = groups.map { |g| g.each_cons(win_len).to_a }
-    groups.flatten 1
+    groups
+      .select { |line| line[0..-2] == line[0..-2] - row_end_squares }
+      .flat_map { |g| g.each_cons(win_len).to_a }
   end
 
   def upwards
@@ -125,17 +117,18 @@ class Board
       loop do
         line << n
         break line if ends.include?(n) || n < 1
-        n = n - (side - 1)
+        n -= (side - 1)
       end
     end
 
-    groups = groups.reject { |line| line.size < win_len }
-    groups.map { |line| line.each_cons(win_len).to_a }.flatten 1
+    groups
+      .reject { |line| line.size < win_len }
+      .flat_map { |line| line.each_cons(win_len).to_a }
   end
 
   # array of numbers that are on the board
   def square_numbers
-    (1..side*side).to_a
+    (1..side * side).to_a
   end
 
   def row_start_squares
@@ -161,12 +154,20 @@ class Board
 
   private
 
+  # between 3 and side
+  def validate_winning_line_length(len)
+    if len < 3 && len <= side
+      raise ArgumentError, "Length must be >= 3 and <= #{side}."
+    end
+    len
+  end
+
   # square board side must be odd, starting up from 3
   def validate_side_length(side)
-    raise NotImplementedError.new 'Board size > 9 is not supported.' if side > 9
+    raise NotImplementedError, 'Board size > 9 is not supported.' if side > 9
 
     return side if side.odd? && side >= 3
-    raise ArgumentError.new('Side length must be odd and >= 3')
+    raise ArgumentError, 'Side length must be odd and >= 3'
   end
 
   # a line with two+ same markers and 1 empty square
@@ -204,10 +205,10 @@ end
 if __FILE__ == $PROGRAM_NAME
   ###
   # test board side length 3..9
-  puts true if [3, 5, 7, 9].map { |s| Board.new(3, side:s) }
+  puts true if [3, 5, 7, 9].map { |s| Board.new(3, side: s) }
 
   begin
-    Board.new 3, side:2
+    Board.new 3, side: 2
   rescue ArgumentError
     puts true
   end
