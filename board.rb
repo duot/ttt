@@ -53,7 +53,7 @@ class Board
   # at risk if 2 (other)markers present, 1 empty square
   # out: playable empty square number
   def at_risk(marker)
-    rs = lines_with_two_marks.select do |line|
+    rs = almost_a_line.select do |line|
       !line.any? marker
     end
 
@@ -62,7 +62,7 @@ class Board
   end
 
   def at_chance(marker)
-    lt = lines_with_two_marks.select do |line|
+    lt = almost_a_line.select do |line|
       line.map(&:marker).any? marker
     end
     return if lt.empty?
@@ -155,6 +155,10 @@ class Board
     square_numbers.last side
   end
 
+  def almost
+    almost_a_line
+  end
+
   private
 
   # square board side must be odd, starting up from 3
@@ -165,12 +169,12 @@ class Board
     raise ArgumentError.new('Side length must be odd and >= 3')
   end
 
-  # a line with two same markers and an empty square
+  # a line with two+ same markers and 1 empty square
   # out: lines
-  def lines_with_two_marks
+  def almost_a_line
     lines.select do |line|
       markers = line.map(&:marker)
-      markers.count(&:nil?) == 1 && markers.uniq.count == 2
+      markers.count(&:nil?) == 1 && markers.uniq.count == win_len - 1
     end
   end
 
@@ -247,6 +251,7 @@ if __FILE__ == $PROGRAM_NAME
   puts b.line_formed?
 
   # test almost_a_line
+  pp b.almost
 
   # test
 end
