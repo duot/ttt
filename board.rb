@@ -69,6 +69,8 @@ class Board
     lt.first.select(&:empty?).first.number
   end
 
+  private
+
   # returns an array of arrays
   # each the length of winning_line_length
   # generate_groups_to_scan
@@ -145,8 +147,6 @@ class Board
     almost_a_line
   end
 
-  private
-
   # between 3 and side
   def validate_winning_line_length(len)
     if len < 3 && len <= side
@@ -196,56 +196,11 @@ class Board
 end
 
 if __FILE__ == $PROGRAM_NAME
-  ###
-  # test board side length 3..9
-  puts true if [3, 5, 7, 9].map { |s| Board.new(3, side: s) }
-
-  begin
-    Board.new 3, side: 2
-  rescue ArgumentError
-    puts true
-  end
-
   # test board display at side length 3..9
   # puts Board.new 3, side: 5
   # puts Board.new 3
   # puts Board.new 3, side: 9
 
-  begin
-    Board.new 3, side: 11
-  rescue NotImplementedError
-    puts true
-  end
-
   b = Board.new 4, side: 5
   puts b
-  pp b.row_start_squares.inspect
-  pp b.col_start_squares.inspect
-  pp b.row_end_squares.inspect
-  pp b.col_end_squares.inspect
-
-  # horizontals
-  pp b.horizontals.inspect
-  puts
-
-  # verticals
-  pp b.verticals.inspect
-  puts
-
-  # downwards
-  pp b.downwards
-
-  # upwards
-  pp b.upwards
-
-  # all groups
-  pp b.groups
-
-  # test a line
-  puts b.line_formed?
-
-  # test almost_a_line
-  pp b.almost
-
-  # test
 end
