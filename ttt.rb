@@ -88,7 +88,6 @@ class TTTGame
   end
 
   def current_player_moves
-    squares_state_snapshot = board.squares.map(&:inspect)
     if human_turn?
       human_move
       @current_player = computer
@@ -96,17 +95,6 @@ class TTTGame
       computer_move
       @current_player = human
     end
-
-    # delta is the amount of squares changed
-    delta = difference(squares_state_snapshot, board.squares.map(&:inspect))
-    msg = "Only one square has to be changed per turn"
-    raise IllegalBoardStateError, msg unless delta == 1
-
-    # TODO rescue
-  end
-
-  def difference(old, new)
-    (old - new).count
   end
 
   def human_turn?
@@ -156,14 +144,12 @@ class TTTGame
   end
 
   def human_move
-    # TODO raise error if human used other marker
-    choice = human.choose board
+    choice = human.choose board.copy
     board[choice] = human.symbol
   end
 
   def computer_move
-    # TODO raise error if computer used other marker
-    choice = computer.choose board
+    choice = computer.choose board.copy
     board[choice] = computer.symbol
   end
 
