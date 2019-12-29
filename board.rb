@@ -8,9 +8,9 @@ class Board
   # note: no need for write access for squares hash
   # only read and write once for square marker
 
-  def initialize(winning_line_length, squares = {}, side: 3)
-    @win_len = validate_winning_line_length(winning_line_length)
+  def initialize(side, win_length, squares = {})
     @side = validate_side_length(side)
+    @win_len = validate_winning_line_length(win_length)
     @squares = squares
     reset if squares.empty?
   end
@@ -149,7 +149,7 @@ class Board
 
   # between 3 and side
   def validate_winning_line_length(len)
-    if len < 3 && len <= side
+    unless len >= 3 && len <= side
       raise ArgumentError, "Length must be >= 3 and <= #{side}."
     end
     len
@@ -197,10 +197,7 @@ end
 
 if __FILE__ == $PROGRAM_NAME
   # test board display at side length 3..9
-  # puts Board.new 3, side: 5
-  # puts Board.new 3
-  # puts Board.new 3, side: 9
 
-  b = Board.new 4, side: 5
+  b = Board.new 5, 4
   puts b
 end

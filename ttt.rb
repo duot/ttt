@@ -217,5 +217,5 @@ if __FILE__ == $PROGRAM_NAME
   # p b.line_formed?
   # p b.line_formed
 
-  TTTGame.new(board: Board.new(5, side: 5), winning_score: 1).play
+  TTTGame.new(board: Board.new(5, 5), winning_score: 1).play
 end
