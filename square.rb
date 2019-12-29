@@ -10,6 +10,10 @@ class Square
     @number = number
   end
 
+  def copy
+    Square.new number, marker
+  end
+
   def empty?; !marker; end
 
   def marker=(marker)

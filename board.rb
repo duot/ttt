@@ -3,16 +3,32 @@ require_relative 'grid.rb'
 
 class Board
   attr_reader :side, :squares, :lines, :lv, :cv, :rv, :th, :ch, :bh, :dd, :ud
-  attr_reader :win_len
+  attr_reader :win_length
 
   # note: no need for write access for squares hash
   # only read and write once for square marker
 
   def initialize(side, win_length, squares = {})
-    @side = validate_side_length(side)
-    @win_len = validate_winning_line_length(win_length)
-    @squares = squares
-    reset if squares.empty?
+    if squares.empty?
+      @side = validate_side_length(side)
+      @squares = squares
+      reset
+    else
+      @side = validate_side_length(Math.sqrt(squares.count).to_i)
+      @squares = copy_squares squares
+    end
+
+    @win_length = validate_winning_line_length(win_length)
+  end
+
+  def copy
+    Board.new side, win_length, copy_squares(squares)
+  end
+
+  # we initialize a copy of each Square obj
+  # if board is initialized with old(possibly still being used) squares,
+  def copy_squares(s)
+    s.map { |number, square_obj| [number, square_obj.copy] }.to_h
   end
 
   def reset
@@ -81,13 +97,13 @@ class Board
   def horizontals
     # select each full groups that are between row-start and row-ends
     square_numbers.each_slice(side).flat_map do |row|
-      row.each_cons(win_len).to_a
+      row.each_cons(win_length).to_a
     end
   end
 
   def verticals
     v = square_numbers.each_slice(side).to_a.transpose
-    v.flat_map { |col| col.each_cons(win_len).to_a }
+    v.flat_map { |col| col.each_cons(win_length).to_a }
   end
 
   def downwards
@@ -100,7 +116,7 @@ class Board
     # reject those row end squares in the middle of the group
     groups
       .select { |line| line[0..-2] == line[0..-2] - row_end_squares }
-      .flat_map { |g| g.each_cons(win_len).to_a }
+      .flat_map { |g| g.each_cons(win_length).to_a }
   end
 
   def upwards
@@ -117,8 +133,8 @@ class Board
     end
 
     groups
-      .reject { |line| line.size < win_len }
-      .flat_map { |line| line.each_cons(win_len).to_a }
+      .reject { |line| line.size < win_length }
+      .flat_map { |line| line.each_cons(win_length).to_a }
   end
 
   # array of numbers that are on the board
@@ -157,7 +173,7 @@ class Board
 
   # square board side must be odd, starting up from 3
   def validate_side_length(side)
-    raise NotImplementedError, 'Board size > 9 is not supported.' if side > 9
+    raise NotImplementedError, 'Board size > 15 is not supported.' if side > 15
 
     return side if side.odd? && side >= 3
     raise ArgumentError, 'Side length must be odd and >= 3'
@@ -168,7 +184,7 @@ class Board
   def almost_a_line
     lines.select do |line|
       markers = line.map(&:marker)
-      markers.count(&:nil?) == 1 && markers.uniq.count == win_len - 1
+      markers.count(&:nil?) == 1 && markers.uniq.count == win_length - 1
     end
   end
 
