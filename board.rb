@@ -1,9 +1,9 @@
 require_relative 'square.rb'
 require_relative 'grid.rb'
+require_relative 'line.rb'
 
 class Board
-  attr_reader :side, :squares, :lines, :lv, :cv, :rv, :th, :ch, :bh, :dd, :ud
-  attr_reader :win_length
+  attr_reader :side, :squares, :lines, :win_length
 
   # note: no need for write access for squares hash
   # only read and write once for square marker
@@ -21,6 +21,20 @@ class Board
     @win_length = validate_winning_line_length(win_length)
   end
 
+  def to_s; grid; end
+
+  def [](key)
+    squares[key].marker
+  end
+
+  def []=(key, symbol)
+    squares[key].marker = symbol
+  end
+
+  def square_numbers
+    (1..side * side).to_a
+  end
+
   def copy
     Board.new side, win_length, copy_squares(squares)
   end
@@ -36,8 +50,6 @@ class Board
     nil
   end
 
-  def to_s; grid; end
-
   def full?
     squares.all? { |_, square| !square.empty? }
   end
@@ -52,12 +64,14 @@ class Board
     line.first.marker
   end
 
-  def [](key)
-    squares[key].marker
+  def at_risk(marker)
+    risk, _ = lines.select { |l| l.at_risk? marker }
+    risk.nil? ? return : risk.empty_cells[0]
   end
 
-  def []=(key, symbol)
-    squares[key].marker = symbol
+  def at_chance(marker)
+    chance, _ = lines.select { |l| l.win_chance? marker }
+    chance.nil? ? return : chance.empty_cells[0]
   end
 
   # return [] of empty squares
@@ -66,26 +80,44 @@ class Board
     squares.select { |_, val| val.empty? }.keys
   end
 
-  # at risk if 2 (other)markers present, 1 empty square
-  # out: playable empty square number
-  def at_risk(marker)
-    rs = almost_a_line.select do |line|
-      !line.any? marker
-    end
-
-    return if rs.empty?
-    rs.first.select(&:empty?).first.number
-  end
-
-  def at_chance(marker)
-    lt = almost_a_line.select do |line|
-      line.map(&:marker).any? marker
-    end
-    return if lt.empty?
-    lt.first.select(&:empty?).first.number
+  def lines
+    squares_at_lines.map { |squares_at_line| Line.new squares_at_line }
   end
 
   private
+
+  # between 3 and side
+  def validate_winning_line_length(len)
+    unless len >= 3 && len <= side
+      raise ArgumentError, "Length must be >= 3 and <= #{side}."
+    end
+    len
+  end
+
+  # square board side must be odd, starting up from 3
+  def validate_side_length(side)
+    raise NotImplementedError, 'Board size > 15 is not supported.' if side > 15
+
+    return side if side.odd? && side >= 3
+    raise ArgumentError, 'Side length must be odd and >= 3'
+  end
+
+  def row_start_squares
+    square_numbers.each_slice(side).map(&:first)
+  end
+
+  def col_start_squares
+    square_numbers.first side
+  end
+
+  # array of squares that are on the end of grid rows
+  def row_end_squares
+    square_numbers.each_slice(side).map(&:last)
+  end
+
+  def col_end_squares
+    square_numbers.last side
+  end
 
   # returns an array of arrays
   # each the length of winning_line_length
@@ -137,73 +169,20 @@ class Board
       .flat_map { |line| line.each_cons(win_length).to_a }
   end
 
-  # array of numbers that are on the board
-  def square_numbers
-    (1..side * side).to_a
+  def squares_at_lines(g = groups)
+    g.map { |g| squares_at(*g) }
   end
 
-  def row_start_squares
-    square_numbers.each_slice(side).map(&:first)
-  end
-
-  def col_start_squares
-    square_numbers.first side
-  end
-
-  # array of squares that are on the end of grid rows
-  def row_end_squares
-    square_numbers.each_slice(side).map(&:last)
-  end
-
-  def col_end_squares
-    square_numbers.last side
-  end
-
-  def almost
-    almost_a_line
-  end
-
-  # between 3 and side
-  def validate_winning_line_length(len)
-    unless len >= 3 && len <= side
-      raise ArgumentError, "Length must be >= 3 and <= #{side}."
-    end
-    len
-  end
-
-  # square board side must be odd, starting up from 3
-  def validate_side_length(side)
-    raise NotImplementedError, 'Board size > 15 is not supported.' if side > 15
-
-    return side if side.odd? && side >= 3
-    raise ArgumentError, 'Side length must be odd and >= 3'
-  end
-
-  # a line with two+ same markers and 1 empty square
-  # out: lines
-  def almost_a_line
-    lines.select do |line|
-      markers = line.map(&:marker)
-      markers.count(&:nil?) == 1 && markers.uniq.count == win_length - 1
-    end
-  end
-
-  # accessor of named squares
-  # left_vertical, center_vertical, right_vertical, etc
-  def lines
-    groups.map { |g| liner(*g) }
+  def squares_at(*args)
+    squares.values_at(*args)
   end
 
   def line_formed
-    lines.select do |line|
+    squares_at_lines.select do |line|
       square1 = line.first
       next if square1.empty?
       line.all? { |square| square.marker == square1.marker }
     end
-  end
-
-  def liner(*args)
-    squares.values_at(*args)
   end
 
   def grid
