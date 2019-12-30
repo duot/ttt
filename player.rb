@@ -15,6 +15,8 @@ class Player
 
   def choose_symbol; end
 
+  def human?; false; end
+
   private
 
   def symbol=(symbol)
@@ -44,6 +46,8 @@ class Human < Player
       break choice if choices.include? choice
     end
   end
+
+  def human?; true; end
 
   private
 
