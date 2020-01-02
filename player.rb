@@ -1,37 +1,37 @@
 require_relative 'errors.rb'
 
 class Player
-  @@symbols = []
-  attr_reader :symbol, :name
+  @@markers = []
+  attr_reader :marker, :name
 
-  def self.symbols; @@symbols; end
+  def self.markers; @@markers; end
 
-  def initialize(symbol, name)
+  def initialize(marker, name)
     @name = name
-    self.symbol = symbol
+    self.marker = marker
   end
 
   def choose(board); end
 
-  def choose_symbol; end
+  def choose_marker; end
 
   def human?; false; end
 
   private
 
-  def symbol=(symbol)
-    raise SymbolNilError if symbol.nil? || symbol.empty?
-    raise SymbolReusedError if @@symbols.include? symbol
-    @symbol = symbol[0]
-    @@symbols << symbol
+  def marker=(marker)
+    raise SymbolNilError if marker.nil? || marker.empty?
+    raise SymbolReusedError if @@markers.include? marker
+    @marker = marker[0]
+    @@markers << marker
   end
 end
 
 class Human < Player
   def initialize
     name = ask_name
-    symbol = ask_symbol
-    super symbol, name
+    marker = ask_marker
+    super marker, name
   end
 
   def choose(board)
@@ -59,11 +59,11 @@ class Human < Player
     end
   end
 
-  def ask_symbol
+  def ask_marker
     loop do
       print "What marker would you like to use? "
       input = gets.chomp.strip[0]
-      break input unless input.empty? || Player.symbols.include?(input)
+      break input unless input.empty? || Player.markers.include?(input)
       puts "#{input} is invalid."
     end
   end
@@ -83,7 +83,7 @@ end
 
 class Computer < Player
   def initialize
-    super choose_symbol, choose_name
+    super choose_marker, choose_name
   end
 
   def choose(board)
@@ -96,8 +96,8 @@ class Computer < Player
     %w(Alpha Bravo Charlie Delta Echo).sample.prepend 'AI_'
   end
 
-  def choose_symbol
-    taken = Player.symbols.map(&:capitalize)
+  def choose_marker
+    taken = Player.markers.map(&:capitalize)
     loop do
       choice = ['O', 'X'].sample # NOTE limited player count
       break choice if !taken.include? choice
@@ -119,10 +119,10 @@ class Computer < Player
   # in: board
   # out: square number
   def defensive(board)
-    board.at_risk symbol
+    board.at_risk marker
   end
 
   def offensive(board)
-    board.at_chance symbol
+    board.at_chance marker
   end
 end

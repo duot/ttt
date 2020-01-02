@@ -27,8 +27,8 @@ class Board
     squares[key].marker
   end
 
-  def []=(key, symbol)
-    squares[key].marker = symbol
+  def []=(key, marker)
+    squares[key].marker = marker
   end
 
   def square_numbers

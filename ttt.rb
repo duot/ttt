@@ -145,12 +145,12 @@ class TTTGame
 
   def human_move
     choice = human.choose board.copy
-    board[choice] = human.symbol
+    board[choice] = human.marker
   end
 
   def computer_move
     choice = computer.choose board.copy
-    board[choice] = computer.symbol
+    board[choice] = computer.marker
   end
 
   def display_result(winner)
@@ -169,9 +169,9 @@ class TTTGame
   def who_won?
     return :TIE if board.winning_marker.nil?
     sym = board.winning_marker
-    if human.symbol == sym
+    if human.marker == sym
       human
-    elsif computer.symbol == sym
+    elsif computer.marker == sym
       computer
     end
   end

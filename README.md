@@ -7,7 +7,7 @@ Game engine.
 - creates the board
 - creates players
 - protects the board from being modified more than once per turn
-- TODO protects board from players using other symbols
+- protects board from players using other symbols
 - tracks which symbol belongs to which player
 
 - FIXME last winning move for computer is displayed too rapidly/or skipped
@@ -29,10 +29,25 @@ See https://www.gamedev.net/forums/topic/646788-tic-tac-toe-on-5x5-board/
 game state. uses Square class internally
 
 - passed between players, and game engine
-  - it's important that TTTGame protects the board from illegal moves
+  - TTTGame protects the board from illegal moves by any Player class
+  - Players can inspect the board, changes are discarded
+  - Square class is abstracted out
 - TODO in theory, it should be possible to have more than 2 players,
 each with their own symbol.
-- Board can now scale up to 9x9
+- Board can now scale up to 15x15, limited by screen size
+
+Lines are groups of Squares
+
+Group square numbers of a line
+
+| name   | purpose                                                   |
+| ------ | --------------------------------------------------------- |
+| Lines  | collections of cell numbers in a line                     |
+| group  | square numbers of a line                                  |
+| symbol | a marker or an empty space; used for displaying the board |
+| marker | a Player marker. e.g. 'X' or 'O'                          |
+
+
 
 ## Player
 
