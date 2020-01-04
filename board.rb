@@ -84,6 +84,10 @@ class Board
     squares_at_lines.map { |squares_at_line| Line.new squares_at_line }
   end
 
+  def lines_with_empty(number)
+    lines.select { |l| l.empty_cell? number }
+  end
+
   private
 
   # between 3 and side
@@ -139,16 +143,21 @@ class Board
   end
 
   def downwards
-    *even_slice, extra = square_numbers.each_slice(side + 1).to_a
+    starts = col_start_squares | row_start_squares
+    ends = row_end_squares | col_end_squares
 
-    # trim the extra number, transpose, and add it back to first row
-    first_row, *rest = even_slice.transpose
-    groups = rest.unshift(first_row + extra)
+    groups = starts.map do |n|
+      line = []
+      loop do
+        line << n
+        break line if ends.include?(n) || n < 1
+        n += (side + 1)
+      end
+    end
 
-    # reject those row end squares in the middle of the group
     groups
-      .select { |line| line[0..-2] == line[0..-2] - row_end_squares }
-      .flat_map { |g| g.each_cons(win_length).to_a }
+      .reject { |line| line.size < win_length }
+      .flat_map { |line| line.each_cons(win_length).to_a }
   end
 
   def upwards
