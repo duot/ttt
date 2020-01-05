@@ -88,6 +88,10 @@ class Board
     lines.select { |l| l.empty_cell? number }
   end
 
+  def center_square
+    side.next / 2
+  end
+
   private
 
   # between 3 and side
