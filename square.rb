@@ -9,6 +9,7 @@ class Square
 
   def initialize(number, marker = nil)
     @marker = marker.nil? ? marker : validate(marker)
+    raise ArgumentError, 'number must be an integer' unless number.integer?
     @number = number
   end
 
@@ -29,6 +30,10 @@ class Square
   end
 
   def to_s; symbol; end
+
+  def self.valid_marker?(m)
+    m.size == MARKER_LENGTH && MARKERS_ALLOWED.match?(m)
+  end
 
   private
 
