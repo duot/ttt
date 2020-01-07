@@ -50,6 +50,11 @@ class Board
     nil
   end
 
+  # draw forced when all lines are blocked
+  def no_wins_possible?
+    lines.all?(&:blocked?)
+  end
+
   def full?
     squares.all? { |_, square| !square.empty? }
   end
@@ -86,6 +91,10 @@ class Board
 
   def lines_with_empty(number)
     lines.select { |l| l.empty_cell? number }
+  end
+
+  def lines_involved(number)
+    lines.select { |l| l.numbers.include? number }
   end
 
   def center_square
