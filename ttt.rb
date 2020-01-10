@@ -7,7 +7,7 @@ class TTTGame
     clear
     display_welcome
     @human = Human.new
-    @computer = Computer.new
+    @computer = MaximizingComputer.new
     @board = board
     @first_player = choose_first_player(who_first)
     @current_player = first_player
@@ -57,8 +57,10 @@ class TTTGame
   def choose_player
     choice = loop do
       print "Who should go first? (computer/human) (c/h): "
-      choice = gets.chomp[0].downcase
-      break choice if ['c', 'h'].include? choice
+      choice = gets.chomp
+      next if choice.empty?
+      break choice if ['c', 'h'].include? choice[0].downcase
+
     end
     { 'c' => computer, 'h' => human }[choice]
   end
@@ -203,5 +205,5 @@ if __FILE__ == $PROGRAM_NAME
   # p b.line_formed?
   # p b.line_formed
 
-  TTTGame.new(board: Board.new(5, 5), winning_score: 1).play
+  TTTGame.new(board: Board.new(5, 4), winning_score: 1).play
 end
