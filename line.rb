@@ -2,9 +2,13 @@ class Line
   attr_reader :markers, :numbers, :cells
 
   def initialize(cells_ar)
+    @cells = validate cells_ar
     @numbers = cells_ar.map(&:number)
     @markers = cells_ar.map(&:marker)
-    @cells = cells_ar
+  end
+
+  def empty_cell?(number)
+    empty_cells.include?(number)
   end
 
   def intersect(other)
@@ -19,27 +23,46 @@ class Line
   end
 
   def empty_cells
-    cells.select(&:empty?).map(&:number)
+    cells.select(&:empty?)
+  end
+
+  def empty_cell_numbers
+    empty_cells.map(&:number)
   end
 
   def filled_cells
     cells.reject(&:empty?)
   end
 
-  def filled
+  def filled_cell_numbers
     filled_cells.map(&:number)
   end
 
-  def filled_by(marker)
+  def filled_by_numbers(marker)
     cells.select { |c| c.marker == marker }.map(&:number)
   end
 
-  def blocked?(marker)
-    !filled.any?(marker)
+  # line already contested, no possible win
+  # Note: line size is win_length
+  # exists 2+ unique markers == blocked
+  def blocked?
+    markers.reject(&:nil?).uniq.count > 1
   end
 
+  # adding this marker, will block the line
+  def blocks?(marker)
+    !blocked? && blockable?(marker)
+  end
+
+  # not empty, not full, not filled by marker
+  # dominated by other marker
   def blockable?(marker)
-    !full? && !filled_cells.any?(&:marker)
+    !empty? && !full? && !blocked? && filled_cells.none? { |c| c.marker == marker }
+  end
+
+  # contains marker, not blocked by other markers
+  def buildable?(marker)
+    !empty? && filled_cells.all? { |c| c.marker == marker }
   end
 
   # 1 empty with all others are marked with same but by other marker
@@ -74,14 +97,6 @@ class Line
     rest.all? first
   end
 
-  def layed(marker)
-    markers.reject(&:nil?).all? marker
-  end
-
-  def layed?(marker)
-    layed.any?
-  end
-
   def to_a
     numbers
   end
@@ -92,5 +107,13 @@ class Line
 
   def to_markers
     markers
+  end
+
+  private
+
+  def validate(cells)
+    raise ArgumentError, 'cells cant be nil' if cells.nil?
+    raise ArgumentError, 'cells cant be empty' if cells.empty?
+    cells
   end
 end
