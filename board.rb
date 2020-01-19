@@ -50,6 +50,11 @@ class Board
     nil
   end
 
+  # draw forced when all lines are blocked
+  def no_wins_possible?
+    lines.all?(&:blocked?)
+  end
+
   def full?
     squares.all? { |_, square| !square.empty? }
   end
@@ -65,12 +70,12 @@ class Board
   end
 
   def at_risk(marker)
-    risk, _ = lines.select { |l| l.at_risk? marker }
+    risk, = lines.select { |l| l.at_risk? marker }
     risk.nil? ? return : risk.empty_cells[0]
   end
 
   def at_chance(marker)
-    chance, _ = lines.select { |l| l.win_chance? marker }
+    chance, = lines.select { |l| l.win_chance? marker }
     chance.nil? ? return : chance.empty_cells[0]
   end
 
@@ -82,6 +87,18 @@ class Board
 
   def lines
     squares_at_lines.map { |squares_at_line| Line.new squares_at_line }
+  end
+
+  def lines_with_empty(number)
+    lines.select { |l| l.empty_cell? number }
+  end
+
+  def lines_involved(number)
+    lines.select { |l| l.numbers.include? number }
+  end
+
+  def center_square
+    side.next / 2
   end
 
   private
@@ -139,16 +156,21 @@ class Board
   end
 
   def downwards
-    *even_slice, extra = square_numbers.each_slice(side + 1).to_a
+    starts = col_start_squares | row_start_squares
+    ends = row_end_squares | col_end_squares
 
-    # trim the extra number, transpose, and add it back to first row
-    first_row, *rest = even_slice.transpose
-    groups = rest.unshift(first_row + extra)
+    groups = starts.map do |n|
+      line = []
+      loop do
+        line << n
+        break line if ends.include?(n) || n < 1
+        n += (side + 1)
+      end
+    end
 
-    # reject those row end squares in the middle of the group
     groups
-      .select { |line| line[0..-2] == line[0..-2] - row_end_squares }
-      .flat_map { |g| g.each_cons(win_length).to_a }
+      .reject { |line| line.size < win_length }
+      .flat_map { |line| line.each_cons(win_length).to_a }
   end
 
   def upwards
@@ -170,7 +192,7 @@ class Board
   end
 
   def squares_at_lines(g = groups)
-    g.map { |g| squares_at(*g) }
+    g.map { |square| squares_at(*square) }
   end
 
   def squares_at(*args)
