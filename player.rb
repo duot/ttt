@@ -1,3 +1,4 @@
+require 'timeout'
 require_relative 'errors.rb'
 require_relative 'square.rb'
 
@@ -140,6 +141,8 @@ class Computer < Player
 end
 
 class Analyzing1Computer < Computer
+  attr_reader :capture_score, :defend_score
+
   def initialize; super; end
 
   def choose(board)
@@ -147,113 +150,85 @@ class Analyzing1Computer < Computer
   end
 
   def move_scores(board)
-    board.unmarked_squares.map { |move| [move, score(move, board.copy)] }
+    board.unmarked_squares.map do |move|
+      [move, score(board.copy, move, marker)]
+    end
   end
 
-  def score(move, board)
-    involved = board.lines_involved move
+  def score(board, move, marker)
+    # ensure capture score is set once
+    # NOTE: assuming board size is consistent,
+    # and not a new board of different size
+    @defend_score ||= board.win_length**3
+    @capture_score ||= defend_score * 2
 
-    total = 0
+    total board.lines_involved(move), marker
+  end
 
-    # return inf if immediate win is available
-    return Float::INFINITY if board.at_chance move
+  private
 
-    risk = involved.count { |x| x.at_risk? marker }
-    risk *= board.side ** 2
-    total += risk
-
-    blockable = involved.count { |x| x.blockable? marker }
-    total += blockable * 3
-
-    buildable = involved.count { |x| x.buildable? marker }
-    total += buildable * 2
-
-    layable = involved.count(&:empty?)
-    total += layable
-
-    # 0, if all lines already blocked
-    # 1, if laying a new line/ all lines are empty
-    # 2*, build up
-    # 3*, block enemy line
-    # 9000, deny win
-    # Infinity, wins
+  def total(involved, marker)
+    [involved.any? { |x| x.win_chance? marker } ? capture_score : 0,
+     involved.count { |x| x.at_risk? marker }.positive? ? defend_score : 0,
+     involved.count { |x| x.blockable? marker } * 3,
+     involved.count { |x| x.buildable? marker } * 2,
+     involved.count(&:empty?)].sum
   end
 end
 
-class MaximizingComputer < Computer
+class MaximizingComputer < Analyzing1Computer
+  TIMEOUT = 5
   def initialize; super; end
 
   def choose(board)
+    Timeout.timeout(TIMEOUT) { return potentially_slow_choose(board) }
+  rescue Timeout::Error
+    super
+  end
+
+  def potentially_slow_choose(board)
     moves = board.unmarked_squares
-    all = moves.map { |move| [move, minimax(3, board, move, marker, Player.markers.index(marker)) ] }
-    puts all.inspect
+    all = moves.map do |move|
+      [move, minimax(3, board, move, marker, Player.markers.index(marker))]
+    end
     all.max { |a, b| a[1] <=> b[1] }[0]
   end
 
   # player_index cycling simulates multiplayer: 2 or more
   def minimax(depth, board, move, max_marker, player_idx)
-    value = score(board, move, Player.markers[player_idx], max_marker)
+    value = score(board, move, Player.markers[player_idx])
 
     # copy board
     board = board.copy
     board[move] = Player.markers[player_idx]
 
-    return value if (depth == 0) || board.full? || board.line_formed?
+    # TODO: prioritize win at shallow depth
+    return value + depth if (depth == 0) || board.full? || board.line_formed?
 
     next_player_idx = next_player(player_idx)
-    next_player_marker = Player.markers[next_player_idx]
 
     # is maximizing
-    if max_marker == Player.markers[player_idx]
+    # or next 2 players are minimizing
+    if max_marker == Player.markers[player_idx] ||
+       (max_marker != Player.markers[player_idx] &&
+       max_marker != Player.markers[next_player_idx])
 
-      best_val = -Float::INFINITY
-      values = board.unmarked_squares.map do |move|
-        value = minimax(depth - 1, board, move, max_marker, next_player_idx)
+      max_val = -Float::INFINITY
+      board.unmarked_squares.each do |nxtmove|
+        value = minimax(depth - 1, board, nxtmove, max_marker, next_player_idx)
+        max_val = [max_val, value].max
       end
-      # best_val = [best_val, value].max
-      best_val = values.max
-      best_val
+      max_val
 
-    elsif max_marker != Player.markers[player_idx] && max_marker != Player.markers[next_player_idx]
-      best_val == -Float::INFINITY
-      values = board.unmarked_squares.map do |move|
-        minimax(depth - 1, board, move, max_marker, next_player_idx)
-      end
-      best_val = values.max
-
-    # is minimizing
+    # is minimizing, next player is maximizing
     else
-      best_val = Float::INFINITY
-      values = board.unmarked_squares.map do |move|
-        value = minimax(depth - 1, board, move, max_marker, next_player_idx)
-        #best_val = [best_val, value].min
+      min_val = Float::INFINITY
+      board.unmarked_squares.each do |nxtmove|
+        value = minimax(depth - 1, board, nxtmove, max_marker, next_player_idx)
+        min_val = [min_val, value].min
       end
-      best_val = values.max
-      best_val
+      min_val
     end
-  end
-
-  def score(board, move, marker, max_marker)
-    involved = board.lines_involved move
-
-    total = 0
-
-    # return inf if immediate win is available
-    total += 9001 if involved.any? { |x| x.win_chance? marker }
-
-    risk = involved.count { |x| x.at_risk? marker }
-    risk *= board.side ** 2
-    total += risk
-
-    blockable = involved.count { |x| x.blockable? marker }
-    total += blockable * 3
-
-    buildable = involved.count { |x| x.buildable? marker }
-    total += buildable * 2
-
-    layable = involved.count(&:empty?)
-    total += layable
-    marker == max_marker ? total : -total
   end
 
   private
@@ -268,19 +243,22 @@ end
 
 if __FILE__ == $PROGRAM_NAME
   load 'board.rb'
-  b = Board.new 3,3
+  b = Board.new 3, 3
   m = MaximizingComputer.new
   a = Analyzing1Computer.new
-  #b[2] = m.marker
+  # b[2] = m.marker
+  puts m.choose b
   b[5] = m.marker
-  #b[9] = m.marker
+  # b[9] = m.marker
   b[4] = m.marker
 
   b[1] = a.marker
   b[3] = a.marker
   b[8] = a.marker
-  
+
   puts b
+  puts m.marker
   puts m.choose b
-  puts m.score b, 6, m.marker, m.marker
+  puts m.score b, 2, m.marker
+  puts m.score b, 6, m.marker
 end

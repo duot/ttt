@@ -70,12 +70,12 @@ class Board
   end
 
   def at_risk(marker)
-    risk, _ = lines.select { |l| l.at_risk? marker }
+    risk, = lines.select { |l| l.at_risk? marker }
     risk.nil? ? return : risk.empty_cells[0]
   end
 
   def at_chance(marker)
-    chance, _ = lines.select { |l| l.win_chance? marker }
+    chance, = lines.select { |l| l.win_chance? marker }
     chance.nil? ? return : chance.empty_cells[0]
   end
 
@@ -192,7 +192,7 @@ class Board
   end
 
   def squares_at_lines(g = groups)
-    g.map { |g| squares_at(*g) }
+    g.map { |square| squares_at(*square) }
   end
 
   def squares_at(*args)

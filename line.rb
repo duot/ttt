@@ -11,8 +11,7 @@ class Line
     empty_cells.include?(number)
   end
 
-  def intersect(other)
-  end
+  def intersect(other); end
 
   def full?
     !cells.any?(&:empty?)
@@ -57,7 +56,8 @@ class Line
   # not empty, not full, not filled by marker
   # dominated by other marker
   def blockable?(marker)
-    !empty? && !full? && !blocked? && filled_cells.none? { |c| c.marker == marker }
+    !empty? && !full? && !blocked? &&
+      filled_cells.none? { |c| c.marker == marker }
   end
 
   # contains marker, not blocked by other markers
