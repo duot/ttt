@@ -24,10 +24,12 @@ class Board
   def to_s; grid; end
 
   def [](key)
+    check(key)
     squares[key].marker
   end
 
   def []=(key, marker)
+    check(key)
     squares[key].marker = marker
   end
 
@@ -71,12 +73,12 @@ class Board
 
   def at_risk(marker)
     risk, = lines.select { |l| l.at_risk? marker }
-    risk.nil? ? return : risk.empty_cells[0]
+    risk.nil? ? return : risk.empty_cells[0].number
   end
 
   def at_chance(marker)
     chance, = lines.select { |l| l.win_chance? marker }
-    chance.nil? ? return : chance.empty_cells[0]
+    chance.nil? ? return : chance.empty_cells[0].number
   end
 
   # return [] of empty squares
@@ -102,6 +104,10 @@ class Board
   end
 
   private
+
+  def check(key)
+    raise RuntimeError, "square #{key.inspect} not found" unless squares[key]
+  end
 
   # between 3 and side
   def validate_winning_line_length(len)
