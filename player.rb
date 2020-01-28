@@ -32,10 +32,11 @@ class Player
     @@markers << marker
   end
 end
+
 class Human < Player
   def initialize
     name = ask_name
-    marker = ask_marker
+    marker = ask_marker(name)
     super marker, name
   end
 
@@ -45,7 +46,7 @@ class Human < Player
     choice = nil
     loop do
       print 'Please pick square '
-      print joinor(choices)
+      print choices.joinor
       print ': '
       choice = gets.chomp.to_i
       break choice if choices.include? choice
@@ -64,25 +65,13 @@ class Human < Player
     end
   end
 
-  def ask_marker
+  def ask_marker(name)
     loop do
-      print "What marker would you like to use? "
+      print "#{name}, what marker would you like to use? "
       input = gets.chomp
       next if input.empty?
       break input.strip[0] unless Player.markers.include?(input)
       puts "#{input} is invalid."
-    end
-  end
-
-  # returns a string of a collection, joined by separators and space
-  # and a conjuction
-  def joinor(coll)
-    case coll.count
-    when 1 then coll[0].to_s
-    when 2 then "#{coll[0]} or #{coll[1]}"
-    else
-      *body, tail = coll
-      "#{body.join(', ')} or #{tail}"
     end
   end
 end
@@ -99,7 +88,7 @@ class Computer < Player
   protected
 
   def choose_name
-    icao_alphabet.sample + icao_alphabet.sample
+    icao_alphabet.sample + icao_alphabet.sample + "(AI)"
   end
 
   def icao_alphabet
