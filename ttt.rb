@@ -1,17 +1,29 @@
 require 'pry'
 require_relative 'board.rb'
 require_relative 'player.rb'
+require_relative 'utility.rb'
 
 class TTTGame
-  def initialize(board: Board.new, winning_score: 5, who_first: 'choose')
+  def initialize(
+    board: Board.new(3, 3),
+
+    # Array of Player instances, ordered by first to move
+    players: [Human.new, MaximizingComputer.new],
+    winning_score: 5,
+
+    # TODO add option to surrender
+    # TODO add early draw
+    # potentially infinite: will add rounds until player reach winning_score
+    rounds_limit: nil
+  )
+
+    @board = board
+    # players is an arr, 0 indexed
+    @players = players
+    @current_player = 0
+    @winning_score = winning_score.abs
     clear
     display_welcome
-    @human = Human.new
-    @computer = MaximizingComputer.new
-    @board = board
-    @first_player = choose_first_player(who_first)
-    @current_player = first_player
-    @winning_score = winning_score.abs
     reset_score
   end
 
@@ -28,7 +40,7 @@ class TTTGame
 
   private
 
-  attr_reader :human, :computer, :board, :score, :winning_score, :first_player
+  attr_reader :board, :score, :winning_score, :players
   attr_accessor :current_player
 
   def play_round
@@ -41,72 +53,54 @@ class TTTGame
         clear_screen_and_display_score_and_board # if human_turn?
       end
       keep_score who_won?
-      break if score?(winning_score)
+      break if any_score?(winning_score)
       reset
     end
   end
 
-  def choose_first_player(who_first)
-    case who_first
-    when 'choose' then choose_player
-    when 'human' then human
-    when 'computer' then computer
-    end
-  end
-
-  def choose_player
-    choice = loop do
-      print "Who should go first? (computer/human) (c/h): "
-      choice = gets.chomp
-      next if choice.empty?
-      break choice if ['c', 'h'].include? choice[0].downcase
-
-    end
-    { 'c' => computer, 'h' => human }[choice]
-  end
-
   # return true if any player has @score sc
   def display_score
-    print "SCORE:   "
-    @score.each do |player, sc|
-      print "#{player.name}: #{sc}   "
+    puts "SCORE:   "
+    (0...players.count).each do |idx|
+      puts "\t#{players[idx].name}:\t#{score[idx]} "
     end
     puts
   end
 
-  def score?(sc)
+  def any_score?(sc)
     @score.value? sc
   end
 
   def keep_score(who)
-    case who
-    when human then @score[human] += 1
-    when computer then @score[computer] += 1
-    end
+    @score[who] += 1 if who
   end
 
   def reset_score
-    @score = { human => 0, computer => 0 }
+    @score = Hash.new(0)
   end
 
   def current_player_moves
-    if human_turn?
-      human_move
-      @current_player = computer
-    else
-      computer_move
-      @current_player = human
-    end
+    display_player current_player
+    player_move current_player
+    @current_player = next_player
   end
 
-  def human_turn?
-    current_player == human
+  def display_player(current)
+    puts "It is #{players[current].name}'s turn."
   end
+
+  # NOTE assumption made about the order of player turns
+  def next_player
+    np = current_player + 1
+    players[np] ? np : 0
+  end
+
+  def human_turn?; players[current_player].human?; end
 
   def reset
     board.reset
     clear
-    @current_player = first_player
+    @current_player = 0
   end
 
   def display_board
@@ -121,7 +115,6 @@ class TTTGame
 
   def clear_screen_and_display_score_and_board
     clear
-    puts
     display_score_and_board
   end
 
@@ -145,23 +138,16 @@ class TTTGame
     system('clear') || system('cls')
   end
 
-  def human_move
-    choice = human.choose board.copy
-    board[choice] = human.marker
-  end
-
-  def computer_move
-    choice = computer.choose board.copy
-    board[choice] = computer.marker
+  def player_move(player_idx)
+    p = players[player_idx]
+    choice = p.choose(board.copy)
+    board[choice] = p.marker
   end
 
   def display_result(winner)
     clear_screen_and_display_score_and_board
-    case winner
-    when human
-      puts "#{human.name}, you won."
-    when computer
-      puts "#{computer.name} won."
+    if winner
+      puts "#{players[winner].name} won."
     else
       puts "It's a draw."
     end
@@ -169,22 +155,26 @@ class TTTGame
   end
 
   def who_won?
-    return :TIE if board.winning_marker.nil?
-    sym = board.winning_marker
-    if human.marker == sym
-      human
-    elsif computer.marker == sym
-      computer
-    end
+    return if board.winning_marker.nil?
+    m = board.winning_marker
+
+    # select player, q, with marker m
+    q = players.select { |p| p.marker == m }
+    players.index *q
+  end
+
+  def describe_setup
+    puts "describe setup TODO"
   end
 
   def display_welcome
-    puts "Welcome to a game of Tic Tac Toe."
+    puts "Welcome #{players.map(&:name).joinor 'and'}."
+    describe_setup
     puts
   end
 
   def display_goodbye
-    puts "Thank you for playing Tic Tac Toe. Goodbye #{human.name}."
+    puts "Thank you for playing Tic Tac Toe. Goodbye."
     puts
   end
 end
@@ -205,5 +195,10 @@ if __FILE__ == $PROGRAM_NAME
   # p b.line_formed?
   # p b.line_formed
 
-  TTTGame.new(board: Board.new(5, 4), winning_score: 1).play
+  b = Board.new(3, 3)
+  TTTGame.new(
+    board: b,
+    players: [Human.new, Human.new, MaximizingComputer.new],
+    winning_score: 2,
+  ).play
 end
