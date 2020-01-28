@@ -1,204 +1,124 @@
-require 'pry'
-require_relative 'board.rb'
-require_relative 'player.rb'
-require_relative 'utility.rb'
+require_relative 'tttgame.rb'
 
-class TTTGame
-  def initialize(
-    board: Board.new(3, 3),
-
-    # Array of Player instances, ordered by first to move
-    players: [Human.new, MaximizingComputer.new],
-    winning_score: 5,
-
-    # TODO add option to surrender
-    # TODO add early draw
-    # potentially infinite: will add rounds until player reach winning_score
-    rounds_limit: nil
-  )
-
-    @board = board
-    # players is an arr, 0 indexed
-    @players = players
-    @current_player = 0
-    @winning_score = winning_score.abs
-    clear
-    display_welcome
-    reset_score
-  end
-
-  def play
-    loop do
-      play_round
-      display_result(who_won?)
-      break unless play_again?
-      display_play_again
-      reset
-    end
-    display_goodbye
+class Game
+  def initialize
+    welcome
+    prompt_classic ? classic : custom
   end
 
   private
 
-  attr_reader :board, :score, :winning_score, :players
-  attr_accessor :current_player
-
-  def play_round
-    reset_score
-    loop do
-      display_score_and_board
-      loop do
-        current_player_moves
-        break if board.full? || board.line_formed?
-        clear_screen_and_display_score_and_board # if human_turn?
-      end
-      keep_score who_won?
-      break if any_score?(winning_score)
-      reset
-    end
-  end
-
-  # return true if any player has @score sc
-  def display_score
-    puts "SCORE:   "
-    (0...players.count).each do |idx|
-      puts "\t#{players[idx].name}:\t#{score[idx]} "
-    end
-    puts
-  end
-
-  def any_score?(sc)
-    @score.value? sc
-  end
-
-  def keep_score(who)
-    @score[who] += 1 if who
-  end
-
-  def reset_score
-    @score = Hash.new(0)
-  end
-
-  def current_player_moves
-    display_player current_player
-    player_move current_player
-    @current_player = next_player
-  end
-
-  def display_player(current)
-    puts "It is #{players[current].name}'s turn."
-  end
-
-  # NOTE assumption made about the order of player turns
-  def next_player
-    np = current_player + 1
-    players[np] ? np : 0
-  end
-
-  def human_turn?; players[current_player].human?; end
-
-  def reset
-    board.reset
+  def welcome
     clear
-    @current_player = 0
-  end
-
-  def display_board
-    puts board
-    puts
-  end
-
-  def display_score_and_board
-    display_score
-    display_board
-  end
-
-  def clear_screen_and_display_score_and_board
-    clear
-    display_score_and_board
-  end
-
-  def display_play_again
-    puts "Let's play again!"
-    puts
-  end
-
-  def play_again?
-    choice = nil
-    loop do
-      print 'Do you want to play again? (y/n) '
-      choice = gets.chomp.downcase[0]
-      break if ['y', 'n'].include? choice
-    end
-
-    choice == 'y'
+    puts "Welcome to Tic Tac Toe game setup."
   end
 
   def clear
     system('clear') || system('cls')
   end
 
-  def player_move(player_idx)
-    p = players[player_idx]
-    choice = p.choose(board.copy)
-    board[choice] = p.marker
-  end
-
-  def display_result(winner)
-    clear_screen_and_display_score_and_board
-    if winner
-      puts "#{players[winner].name} won."
-    else
-      puts "It's a draw."
+  def prompt_classic
+    choice = loop do
+      print "What game would you like to play, (1)classic or (2)custom? "
+      choice = gets.chomp.downcase[0..1]
+      break choice if ['1', '2'].include? choice
+      clear
+      puts "Please enter '1' or '2'."
     end
-    puts
+    choice == '1'
   end
 
-  def who_won?
-    return if board.winning_marker.nil?
-    m = board.winning_marker
-
-    # select player, q, with marker m
-    q = players.select { |p| p.marker == m }
-    players.index *q
+  def classic
+    TTTGame.new.play
   end
 
-  def describe_setup
-    puts "describe setup TODO"
+  def custom
+    # for each pair of ky_symbol, and values
+    # init a new custome TTTGame
+    TTTGame.new(setup).play
   end
 
-  def display_welcome
-    puts "Welcome #{players.map(&:name).joinor 'and'}."
-    describe_setup
-    puts
+  def setup
+    bs = board_setup
+    { board: Board.new(bs[:board_size], bs[:win_length]),
+      players: create_players(player_count(bs[:win_length])),
+      rounds_limit: rounds }
   end
 
-  def display_goodbye
-    puts "Thank you for playing Tic Tac Toe. Goodbye."
-    puts
+  def ask_int(msg, condition_proc)
+    loop do
+      print msg
+      choice = gets.chomp.to_i
+      break choice if condition_proc.call(choice)
+    end
+  end
+
+  def humans
+    msg = "Please enter the number of human players: "
+    condition = proc { |c| c >= 0 && c <= 3 }
+    ask_int msg, condition
+  end
+
+  def computers
+    msg = "Please enter the number of computer players: "
+    cond = proc { |c| c >= 0 && c <= 3 }
+    ask_int msg, cond
+  end
+
+  def player_count(win_len)
+    loop do
+      puts "Player count is limited to #{win_len}"
+      h = humans
+      c = computers
+      e = h + c
+      break { humans: h, computers: c } if e >= 2 && e <= win_len
+    end
+  end
+
+  def create_humans(n)
+    puts "Let's add #{n} human players. "
+    Array.new(n) do |i|
+      puts "Human player #{i.next}"
+      Human.new
+    end
+  end
+
+  def create_computers(n)
+    Array.new(n) { MaximizingComputer.new }
+  end
+
+  def create_players(humans:, computers:)
+    create_humans(humans) + create_computers(computers)
+  end
+
+  # highest score after rounds# wins
+  # otherwise draw
+  def rounds
+    msg = "Please enter the number of rounds: "
+    cond = proc { |choice| choice >= 1 }
+    ask_int msg, cond
+  end
+
+  def board_setup
+    msg = "Please select board size.
+It must be odd and between 3 up to 15: "
+    cond = proc { |choice| choice.odd? && choice >= 3 && choice <= 15 }
+    board_size = ask_int(msg, cond)
+
+    length = board_size == 3 ? 3 : win_length(board_size)
+
+    { win_length: length,
+      board_size: board_size }
+  end
+
+  def win_length(max)
+    msg = "Please select the length of the winning line.
+It must be between 3 and #{max}: "
+    cond = proc { |choice| choice.between? 3, max }
+    ask_int msg, cond
   end
 end
 
-#########   #########   #########
-
 if __FILE__ == $PROGRAM_NAME
-  # b = Board.new
-  # p b[1].x!
-  # p b[1].marker
-  # p b[1]
-  # p b[9].o!
-  # p b[9].marker
-  # p b.choices
-  # b.display
-  # print 'board full? '
-  # p b.full? nil, 3
-  # p b.line_formed?
-  # p b.line_formed
-
-  b = Board.new(3, 3)
-  TTTGame.new(
-    board: b,
-    players: [Human.new, Human.new, MaximizingComputer.new],
-    winning_score: 2,
-  ).play
+  Game.new
 end
