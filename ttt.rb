@@ -19,13 +19,9 @@ class Game
   end
 
   def prompt_classic
-    choice = loop do
-      print "What game would you like to play, (1)classic or (2)custom? "
-      choice = gets.chomp.downcase[0..1]
-      break choice if ['1', '2'].include? choice
-      clear
-      puts "Please enter '1' or '2'."
-    end
+    msg =  "What game would you like to play, (1)classic or (2)custom?
+Please enter 1 or 2: "
+    choice = ask_options(msg, ['1', '2'])
     choice == '1'
   end
 
@@ -44,7 +40,7 @@ class Game
     { board: Board.new(bs[:board_size], bs[:win_length]),
       players: create_players(player_count(bs[:win_length])),
       winning_score: win_score,
-      rounds_limit: max_rounds }
+      draw_limit: max_draw }
   end
 
   def humans
@@ -85,10 +81,8 @@ class Game
     create_humans(humans) + create_computers(computers)
   end
 
-  # highest score after rounds# wins
-  # otherwise draw
-  def max_rounds
-    msg = "Please enter the maximum number of rounds: "
+  def max_draw
+    msg = "Please enter the maximum number of successive draw: "
     cond = proc { |choice| choice.positive? }
     ask_int msg, cond
   end

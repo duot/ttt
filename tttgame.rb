@@ -18,8 +18,7 @@ class TTTGame
 
     # TODO add option to surrender
     # TODO add early draw
-    # potentially infinite: will add rounds until player reach winning_score
-    rounds_limit: nil
+    draw_limit: Float::INFINITY
   )
 
     @board = board
@@ -27,6 +26,8 @@ class TTTGame
     @players = players
     @current_player = 0
     @winning_score = winning_score.abs
+    @draw_limit = draw_limit
+    @draws = 0
     clear
     display_welcome
     reset_score
@@ -45,8 +46,8 @@ class TTTGame
 
   private
 
-  attr_reader :board, :score, :winning_score, :players
-  attr_accessor :current_player
+  attr_reader :board, :score, :winning_score, :players, :draw_limit
+  attr_accessor :current_player, :draws
 
   def play_game
     reset_score
@@ -57,8 +58,9 @@ class TTTGame
         break if board.full? || board.line_formed?
         clear_screen_and_display_score_and_board # if human_turn?
       end
-      keep_score who_won?
+      track_score_and_draws who_won?
       break if any_score?(winning_score)
+      return if draws == draw_limit
       reset
     end
   end
@@ -67,7 +69,7 @@ class TTTGame
   def display_score
     puts "SCORE:   "
     (0...players.count).each do |idx|
-      puts "\t#{players[idx].name}:\t#{score[idx]} "
+      puts "\t#{players[idx].name.ljust 32}#{score[idx]} "
     end
     puts
   end
@@ -78,6 +80,15 @@ class TTTGame
 
   def keep_score(who)
     @score[who] += 1 if who
+  end
+
+  def track_score_and_draws(who)
+    if who
+      keep_score who
+      @draws = 0
+    else
+      @draws += 1
+    end
   end
 
   def reset_score
@@ -160,11 +171,14 @@ class TTTGame
   end
 
   def describe_setup
-    puts "describe setup TODO"
-  end
+    puts "It takes #{board.win_length} markers in a row to win each round,
+and it takes #{winning_score} points to win the game.
+The number of successive draws are limited to #{draw_limit}."
+    end
 
   def display_welcome
-    puts "Welcome #{players.map(&:name).joinor 'and'}."
+    puts "Welcome #{players.map(&:name).joinor 'and'} to a game of Tic Tac Toe."
+    puts
     describe_setup
     puts
   end

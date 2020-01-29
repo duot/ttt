@@ -22,5 +22,4 @@ module Prompt
       break input if options.include? input
     end
   end
-
 end
