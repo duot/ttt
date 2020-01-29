@@ -1,6 +1,9 @@
 require_relative 'tttgame.rb'
+require_relative 'display.rb'
 
 class Game
+  include Display
+
   def initialize
     welcome
     prompt_classic ? classic : custom
@@ -13,9 +16,9 @@ class Game
     puts "Welcome to Tic Tac Toe game setup."
   end
 
-  def clear
-    system('clear') || system('cls')
-  end
+#  def clear
+#    system('clear') || system('cls')
+#  end
 
   def prompt_classic
     choice = loop do
@@ -42,7 +45,8 @@ class Game
     bs = board_setup
     { board: Board.new(bs[:board_size], bs[:win_length]),
       players: create_players(player_count(bs[:win_length])),
-      rounds_limit: rounds }
+      winning_score: win_score,
+      rounds_limit: max_rounds }
   end
 
   def ask_int(msg, condition_proc)
@@ -93,9 +97,15 @@ class Game
 
   # highest score after rounds# wins
   # otherwise draw
-  def rounds
-    msg = "Please enter the number of rounds: "
-    cond = proc { |choice| choice >= 1 }
+  def max_rounds
+    msg = "Please enter the maximum number of rounds: "
+    cond = proc { |choice| choice.positive? }
+    ask_int msg, cond
+  end
+
+  def win_score
+    msg = "Please enter the top score to win the game: "
+    cond = proc { | choice| choice.positive? }
     ask_int msg, cond
   end
 

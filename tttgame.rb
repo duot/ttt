@@ -2,8 +2,11 @@ require 'pry'
 require_relative 'board.rb'
 require_relative 'player.rb'
 require_relative 'utility.rb'
+require_relative 'display.rb'
 
 class TTTGame
+  include Display
+
   def initialize(
     board: Board.new(3, 3),
 
@@ -29,7 +32,7 @@ class TTTGame
 
   def play
     loop do
-      play_round
+      play_game
       display_result(who_won?)
       break unless play_again?
       display_play_again
@@ -43,7 +46,7 @@ class TTTGame
   attr_reader :board, :score, :winning_score, :players
   attr_accessor :current_player
 
-  def play_round
+  def play_game
     reset_score
     loop do
       display_score_and_board
@@ -132,10 +135,6 @@ class TTTGame
     end
 
     choice == 'y'
-  end
-
-  def clear
-    system('clear') || system('cls')
   end
 
   def player_move(player_idx)
