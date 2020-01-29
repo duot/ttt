@@ -161,11 +161,16 @@ class Board
     v.flat_map { |col| col.each_cons(win_length).to_a }
   end
 
-  def downwards
-    starts = col_start_squares | row_start_squares
-    ends = row_end_squares | col_end_squares
+  def downward_starts
+    col_start_squares | row_start_squares
+  end
 
-    groups = starts.map do |n|
+  def downward_ends
+    row_end_squares | col_end_squares
+  end
+
+  def downward_groups(starts, ends)
+    starts.map do |n|
       line = []
       loop do
         line << n
@@ -173,17 +178,25 @@ class Board
         n += (side + 1)
       end
     end
+  end
 
+  def downwards
+    groups = downward_groups(downward_starts, downward_ends)
     groups
       .reject { |line| line.size < win_length }
       .flat_map { |line| line.each_cons(win_length).to_a }
   end
 
-  def upwards
-    starts = row_start_squares | col_end_squares
-    ends = col_start_squares | row_end_squares
+  def upward_starts
+    row_start_squares | col_end_squares
+  end
 
-    groups = starts.map do |n|
+  def upward_ends
+    col_start_squares | row_end_squares
+  end
+
+  def upward_groups(starts, ends)
+    starts.map do |n|
       line = []
       loop do
         line << n
@@ -191,7 +204,10 @@ class Board
         n -= (side - 1)
       end
     end
+  end
 
+  def upwards
+    groups = upward_groups(upward_starts, upward_ends)
     groups
       .reject { |line| line.size < win_length }
       .flat_map { |line| line.each_cons(win_length).to_a }
