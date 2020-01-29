@@ -51,25 +51,26 @@ class TTTGame
 
   def play_game
     reset_score
+    play_round while !any_score?(winning_score) && draws < draw_limit
+  end
+
+  def play_round
+    display_score_and_board
     loop do
-      display_score_and_board
-      loop do
-        current_player_moves
-        break if board.full? || board.line_formed?
-        clear_screen_and_display_score_and_board # if human_turn?
-      end
-      track_score_and_draws who_won?
-      break if any_score?(winning_score)
-      return if draws == draw_limit
-      reset
+      current_player_moves
+      break if board.full? || board.line_formed?
+      clear_screen_and_display_score_and_board
     end
+    track_score_and_draws who_won_round?
+    reset
   end
 
   # return true if any player has @score sc
   def display_score
     puts "SCORE:   "
     (0...players.count).each do |idx|
-      puts "\t#{players[idx].name.ljust 32}#{score[idx]} "
+      pl = players[idx]
+      puts "\t#{pl.marker} | #{pl.name.ljust 32}#{score[idx]} "
     end
     puts
   end
@@ -93,6 +94,10 @@ class TTTGame
 
   def reset_score
     @score = Hash.new(0)
+  end
+
+  def who_won?
+    score.key winning_score
   end
 
   def current_player_moves
@@ -155,13 +160,15 @@ class TTTGame
     clear_screen_and_display_score_and_board
     if winner
       puts "#{players[winner].name} won."
+    elsif draws >= draw_limit
+      puts "Maximimum successive draws reached."
     else
       puts "It's a draw."
     end
     puts
   end
 
-  def who_won?
+  def who_won_round?
     return if board.winning_marker.nil?
     m = board.winning_marker
 
@@ -172,9 +179,9 @@ class TTTGame
 
   def describe_setup
     puts "It takes #{board.win_length} markers in a row to win each round,
-and it takes #{winning_score} points to win the game.
-The number of successive draws are limited to #{draw_limit}."
-    end
+and it takes #{winning_score} points to win the game. Successive draws are
+limited to #{draw_limit}."
+  end
 
   def display_welcome
     puts "Welcome #{players.map(&:name).joinor 'and'} to a game of Tic Tac Toe."

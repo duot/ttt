@@ -106,7 +106,7 @@ class Board
   private
 
   def check(key)
-    raise RuntimeError, "square #{key.inspect} not found" unless squares[key]
+    raise "square #{key.inspect} not found" unless squares[key]
   end
 
   # between 3 and side
@@ -223,4 +223,5 @@ if __FILE__ == $PROGRAM_NAME
 
   b = Board.new 5, 4
   puts b
+  puts b[1]
 end

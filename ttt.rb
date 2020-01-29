@@ -89,7 +89,7 @@ Please enter 1 or 2: "
 
   def win_score
     msg = "Please enter the top score to win the game: "
-    cond = proc { | choice| choice.positive? }
+    cond = proc { |choice| choice.positive? }
     ask_int msg, cond
   end
 
