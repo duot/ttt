@@ -73,6 +73,8 @@ Holds the  Player's marker on the board.
 
 Displays the board. It scales with the size of the board.
 
+NOTE: Currently unable to detect the user's terminal size to set maximum board size.
+
 ## Player class
 
 Player inspects the board using Board#unmarked_squares.

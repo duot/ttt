@@ -43,25 +43,26 @@ Please enter 1 or 2: "
       draw_limit: max_draw }
   end
 
-  def humans
-    msg = "Please enter the number of human players: "
-    condition = proc { |c| c >= 0 && c <= 3 }
+  def humans(win_len)
+    msg = "Please enter the number of human players (0 up to #{win_len}): "
+    condition = proc { |c| c >= 0 && c <= win_len }
     ask_int msg, condition
   end
 
-  def computers
-    msg = "Please enter the number of computer players: "
-    cond = proc { |c| c >= 0 && c <= 3 }
+  def computers(win_len)
+    msg = "Please enter the number of computer players (0 up to #{win_len}): "
+    cond = proc { |c| c >= 0 && c <= win_len }
     ask_int msg, cond
   end
 
   def player_count(win_len)
     loop do
-      puts "Player count is limited to #{win_len}"
-      h = humans
-      c = computers
-      e = h + c
-      break { humans: h, computers: c } if e >= 2 && e <= win_len
+      puts "The total number of players is limited to #{win_len}."
+      h = humans(win_len)
+      available = win_len - h
+      c = available.zero? ? 0 : computers(available)
+      total = h + c
+      break { humans: h, computers: c } if total >= 2 && total <= win_len
     end
   end
 

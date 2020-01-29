@@ -65,9 +65,8 @@ class TTTGame
     reset
   end
 
-  # return true if any player has @score sc
   def display_score
-    puts "SCORE:   "
+    puts "SCORE: "
     (0...players.count).each do |idx|
       pl = players[idx]
       puts "\t#{pl.marker} | #{pl.name.ljust 32}#{score[idx]} "
@@ -107,7 +106,8 @@ class TTTGame
   end
 
   def display_player(current)
-    puts "It is #{players[current].name}'s turn."
+    p1 = players[current]
+    puts "It is #{p1.marker}, #{p1.name}'s turn."
   end
 
   # NOTE assumption made about the order of player turns
@@ -129,7 +129,14 @@ class TTTGame
     puts
   end
 
+  def display_info
+    #puts "Mark #{board.win_length} in a row to score a point."
+    #puts "Score #{winning_score} points to win."
+    puts "DRAW:\t#{draws} of #{draw_limit}"
+  end
+
   def display_score_and_board
+    display_info
     display_score
     display_board
   end
