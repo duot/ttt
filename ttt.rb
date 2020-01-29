@@ -8,7 +8,7 @@ class Game
 
   def initialize
     welcome
-    prompt_classic ? classic : custom
+    play prompt_options
   end
 
   private
@@ -16,13 +16,56 @@ class Game
   def welcome
     clear
     puts "Welcome to Tic Tac Toe game setup."
+    friendly_note
   end
 
-  def prompt_classic
-    msg =  "What game would you like to play, (1)classic or (2)custom?
-Please enter 1 or 2: "
-    choice = ask_options(msg, ['1', '2'])
-    choice == '1'
+  def friendly_note
+    puts <<_
+
+    Please note that the game display is currently unable to scale with the screen size. Please press Ctrl + c or Cmd + c to terminate.
+
+_
+  end
+
+  def prompt_options
+    options = %w(1 2 3 4)
+    msg = "What game would you like to play?
+    (1)classic
+    (2)custom
+    (3)bots-v-bots
+    (4)me-against-the-swarm
+Please enter #{options.joinor}: "
+
+    ask_options(msg, options)
+  end
+
+  def play(op)
+    case op.to_i
+    when 1 then classic
+    when 2 then custom
+    when 3 then bots
+    when 4 then swarm
+    end
+  end
+
+  def swarm
+    op = {
+      board: Board.new(7, 4),
+      players: create_players(humans: 1, computers: 6),
+      winning_score: 5,
+      draw_limit: 5
+    }
+    TTTGame.new(op).play
+  end
+
+  def bots
+    op = {
+      board: Board.new(15, 4),
+      players: create_computers(15),
+      winning_score: 5,
+      draw_limit: 5
+    }
+    TTTGame.new(op).play
   end
 
   def classic

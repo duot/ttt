@@ -130,8 +130,8 @@ class TTTGame
   end
 
   def display_info
-    #puts "Mark #{board.win_length} in a row to score a point."
-    #puts "Score #{winning_score} points to win."
+    # puts "Mark #{board.win_length} in a row to score a point."
+    # puts "Score #{winning_score} points to win."
     puts "DRAW:\t#{draws} of #{draw_limit}"
   end
 
