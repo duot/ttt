@@ -3,9 +3,11 @@ require_relative 'board.rb'
 require_relative 'player.rb'
 require_relative 'utility.rb'
 require_relative 'display.rb'
+require_relative 'prompt.rb'
 
 class TTTGame
   include Display
+  include Prompt
 
   def initialize(
     board: Board.new(3, 3),
@@ -127,13 +129,8 @@ class TTTGame
   end
 
   def play_again?
-    choice = nil
-    loop do
-      print 'Do you want to play again? (y/n) '
-      choice = gets.chomp.downcase[0]
-      break if ['y', 'n'].include? choice
-    end
-
+    msg = 'Do you want to play again? (y/n) '
+    choice = ask_options msg, ['y', 'n']
     choice == 'y'
   end
 

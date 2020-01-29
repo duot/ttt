@@ -1,6 +1,7 @@
 require 'timeout'
 require_relative 'errors.rb'
 require_relative 'square.rb'
+require_relative 'prompt.rb'
 
 class Player
   @@markers = []
@@ -34,6 +35,8 @@ class Player
 end
 
 class Human < Player
+  include Prompt
+
   def initialize
     name = ask_name
     marker = ask_marker(name)
@@ -41,16 +44,10 @@ class Human < Player
   end
 
   def choose(board)
-    # display choices
     choices = board.unmarked_squares
-    choice = nil
-    loop do
-      print 'Please pick square '
-      print choices.joinor
-      print ': '
-      choice = gets.chomp.to_i
-      break choice if choices.include? choice
-    end
+    msg = "Please pick square #{choices.joinor}: "
+    options = choices.map(&:to_s)
+    ask_options(msg, options).to_i
   end
 
   def human?; true; end
@@ -58,19 +55,15 @@ class Human < Player
   private
 
   def ask_name
-    loop do
-      print "What's your name? "
-      input = gets.chomp.strip
-      break input.capitalize unless input.empty?
-    end
+    msg = "What's your name? "
+    ask_word(msg).capitalize
   end
 
   def ask_marker(name)
     loop do
-      print "#{name}, what marker would you like to use? "
-      input = gets.chomp
-      next if input.empty?
-      break input.strip[0] unless Player.markers.include?(input)
+      msg = "#{name}, what marker would you like to use? "
+      input = ask_word(msg)[0]
+      break input unless Player.markers.include?(input)
       puts "#{input} is invalid."
     end
   end

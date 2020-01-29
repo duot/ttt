@@ -1,8 +1,10 @@
 require_relative 'tttgame.rb'
 require_relative 'display.rb'
+require_relative 'prompt.rb'
 
 class Game
   include Display
+  include Prompt
 
   def initialize
     welcome
@@ -15,10 +17,6 @@ class Game
     clear
     puts "Welcome to Tic Tac Toe game setup."
   end
-
-#  def clear
-#    system('clear') || system('cls')
-#  end
 
   def prompt_classic
     choice = loop do
@@ -47,14 +45,6 @@ class Game
       players: create_players(player_count(bs[:win_length])),
       winning_score: win_score,
       rounds_limit: max_rounds }
-  end
-
-  def ask_int(msg, condition_proc)
-    loop do
-      print msg
-      choice = gets.chomp.to_i
-      break choice if condition_proc.call(choice)
-    end
   end
 
   def humans
