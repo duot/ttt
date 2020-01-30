@@ -28,32 +28,63 @@ _
   end
 
   def prompt_options
-    options = %w(1 2 3 4)
+    options = %w(1 2 3 4 5 6 7 8)
     msg = "What game would you like to play?
-    (1)classic
-    (2)custom
-    (3)bots-v-bots
-    (4)me-against-the-swarm
+    1  human vs computer
+    2  human vs human
+    3  custom
+    4  3x3, 3 bots
+    5  5x5, 5 bots, 4 in a row
+    6  7x7, 7 bots, 5 in a row
+    7  all 15 bots
+    8  me-against-the-swarm
 Please enter #{options.joinor}: "
 
     ask_options(msg, options)
   end
 
-  def play(op)
-    case op.to_i
-    when 1 then classic
-    when 2 then custom
-    when 3 then bots
-    when 4 then swarm
-    end
+  def play(code)
+    codes = {
+      1 => :classic,
+      2 => :humanvhuman,
+      3 => :custom,
+      4 => :three,
+      5 => :five,
+      6 => :seven,
+      7 => :bots,
+      8 => :swarm
+    }
+    method(codes[code.to_i]).call
+  end
+
+  def setter(*args)
+    size, row, humans, computers, score, draw = args
+    op = {
+      board: Board.new(size, row),
+      players: create_players(humans: humans, computers: computers)
+    }
+    op[:draw_limit] = draw if draw
+    op[:winning_score] = score if score
+    op
+  end
+
+  def seven; init setter(7, 5, 0, 7, nil, 5); end
+
+  def five; init setter(5, 4, 0, 5, nil, 5); end
+
+  def three; init setter(3, 3, 0, 3, nil, 5); end
+
+  def humanvhuman; init setter(3, 3, 2, 0, nil, nil); end
+
+  def init(op)
+    TTTGame.new(op).play
   end
 
   def swarm
     op = {
-      board: Board.new(7, 4),
-      players: create_players(humans: 1, computers: 6),
-      winning_score: 5,
-      draw_limit: 5
+      board: Board.new(15, 4),
+      players: create_players(humans: 1, computers: 14),
+      draw_limit: 1
     }
     TTTGame.new(op).play
   end
@@ -62,8 +93,7 @@ Please enter #{options.joinor}: "
     op = {
       board: Board.new(15, 4),
       players: create_computers(15),
-      winning_score: 5,
-      draw_limit: 5
+      draw_limit: 1
     }
     TTTGame.new(op).play
   end
