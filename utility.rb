@@ -6,8 +6,9 @@ end
 
 class Array
   def joinor(conjunction = 'or', separator = ', ')
-    return self.join " #{conjunction} " if self.count <= 2
-    *body, tail = self
+    ar = self
+    return ar.join " #{conjunction} " if ar.count <= 2
+    *body, tail = ar
     "#{body.join separator}#{separator}#{conjunction} #{tail}"
   end
 end
