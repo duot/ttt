@@ -18,7 +18,8 @@ class TTTGame
 
     # TODO add option to surrender
     # TODO add early draw
-    draw_limit: Float::INFINITY
+    draw_limit: Float::INFINITY,
+    display_delay: 1
   )
 
     @board = board
@@ -28,6 +29,7 @@ class TTTGame
     @winning_score = winning_score.abs
     @draw_limit = draw_limit
     @draws = 0
+    @display_delay = display_delay
     clear
     display_welcome
     reset_score
@@ -47,7 +49,7 @@ class TTTGame
   private
 
   attr_reader :board, :score, :winning_score, :players, :draw_limit
-  attr_accessor :current_player, :draws
+  attr_accessor :current_player, :draws, :display_delay
 
   def play_game
     reset_score
@@ -62,6 +64,7 @@ class TTTGame
       clear_screen_and_display_score_and_board
     end
     track_score_and_draws who_won_round?
+    clear_screen_and_display_score_and_board_and_sleep
     reset
   end
 
@@ -141,8 +144,15 @@ class TTTGame
   end
 
   def clear_screen_and_display_score_and_board
+    sleep(display_delay)
     clear
     display_score_and_board
+  end
+
+  def clear_screen_and_display_score_and_board_and_sleep
+    clear
+    display_score_and_board
+    sleep 2
   end
 
   def display_play_again

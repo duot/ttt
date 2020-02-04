@@ -118,6 +118,8 @@ Minimax is tricky in many ways.
 
 ​	The depth plays a huge part in determining the best move. Too deep and the game hangs, and too shallow and the move is weak. #increase_magnitude allows the minimax to prefer winning move at shallower depth.
 
+​	TODO: add depth arg
+
 ​	Heuristic: Currently considers only winning, loosing, neutral moves with scores 1,  -1, and 0.
 
 ## Utility

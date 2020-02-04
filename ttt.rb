@@ -64,25 +64,25 @@ Please enter #{options.joinor}: "
   end
 
   def setter(*args)
-    size, row, humans, computers, score, draw = args
+    size, row, humans, computers, score, draw, *other = args
     op = {
       board: Board.new(size, row),
       players: create_players(humans: humans, computers: computers)
     }
     op[:draw_limit] = draw if draw
     op[:winning_score] = score if score
-    op
+    other.any? ? op.merge(*other) : op
   end
 
   def seven; init setter(7, 5, 0, 7, nil, 1); end
 
   def five; init setter(5, 4, 0, 5, nil, 3); end
 
-  def three; init setter(3, 3, 0, 3, nil, 5); end
+  def three; init setter(3, 3, 0, 3, nil, 5, { display_delay: 1 }); end
 
   def humanvhuman; init setter(3, 3, 2, 0, nil, nil); end
 
-  def cvc; init setter(3, 3, 0, 2, nil, 3); end
+  def cvc; init setter(3, 3, 0, 2, nil, 3, { display_delay: 0.5 }); end
 
   def init(op)
     TTTGame.new(op).play
