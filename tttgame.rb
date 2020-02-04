@@ -13,7 +13,7 @@ class TTTGame
     board: Board.new(3, 3),
 
     # Array of Player instances, ordered by first to move
-    players: [Human.new, MaximizingComputer.new],
+    players: [Human.new, Max2.new],
     winning_score: 5,
 
     # TODO add option to surrender
@@ -107,7 +107,7 @@ class TTTGame
 
   def display_player(current)
     p1 = players[current]
-    puts "It is #{p1.marker}, #{p1.name}'s turn."
+    puts "It is #{p1.marker.parenthesize} #{p1.name}'s turn."
   end
 
   # NOTE assumption made about the order of player turns
@@ -130,8 +130,7 @@ class TTTGame
   end
 
   def display_info
-    # puts "Mark #{board.win_length} in a row to score a point."
-    # puts "Score #{winning_score} points to win."
+    puts "PLAY: #{board.win_length} in a row"
     puts "DRAW:\t#{draws} of #{draw_limit}"
   end
 

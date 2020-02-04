@@ -1,6 +1,7 @@
 require_relative 'tttgame.rb'
 require_relative 'display.rb'
 require_relative 'prompt.rb'
+require_relative 'max2.rb'
 
 class Game
   include Display
@@ -8,10 +9,12 @@ class Game
 
   def initialize
     welcome
-    play prompt_options
+    play prompt_options.to_i
   end
 
   private
+
+  VALID_SIZES = (3..15).select(&:odd?)
 
   def welcome
     clear
@@ -32,29 +35,32 @@ _
     msg = "What game would you like to play?
     1  human vs computer
     2  human vs human
-    3  custom
-    4  3x3, 3 bots
-    5  5x5, 5 bots, 4 in a row
-    6  7x7, 7 bots, 5 in a row
-    7  all 15 bots
-    8  me-against-the-swarm
+    3  computer vs computer
+    4  custom
+    5  3x3, 3 bots
+    6  5x5, 5 bots, 4 in a row
+    7  7x7, 7 bots, 5 in a row
+    8  all 15 bots
+    9  me-against-the-swarm
+
 Please enter #{options.joinor}: "
 
     ask_options(msg, options)
   end
 
-  def play(code)
+  def play(op)
     codes = {
       1 => :classic,
       2 => :humanvhuman,
-      3 => :custom,
-      4 => :three,
-      5 => :five,
-      6 => :seven,
-      7 => :bots,
-      8 => :swarm
+      3 => :cvc,
+      4 => :custom,
+      5 => :three,
+      6 => :five,
+      7 => :seven,
+      8 => :bots,
+      9 => :swarm
     }
-    method(codes[code.to_i]).call
+    method(codes[op]).call
   end
 
   def setter(*args)
@@ -68,13 +74,15 @@ Please enter #{options.joinor}: "
     op
   end
 
-  def seven; init setter(7, 5, 0, 7, nil, 5); end
+  def seven; init setter(7, 5, 0, 7, nil, 1); end
 
-  def five; init setter(5, 4, 0, 5, nil, 5); end
+  def five; init setter(5, 4, 0, 5, nil, 3); end
 
   def three; init setter(3, 3, 0, 3, nil, 5); end
 
   def humanvhuman; init setter(3, 3, 2, 0, nil, nil); end
+
+  def cvc; init setter(3, 3, 0, 2, nil, 3); end
 
   def init(op)
     TTTGame.new(op).play
@@ -140,7 +148,7 @@ Please enter #{options.joinor}: "
   end
 
   def create_humans(n)
-    puts "Let's add #{n} human players. "
+    puts "Let's add #{n} human players. " if n.positive?
     Array.new(n) do |i|
       puts "Human player #{i.next}"
       Human.new
@@ -148,7 +156,7 @@ Please enter #{options.joinor}: "
   end
 
   def create_computers(n)
-    Array.new(n) { MaximizingComputer.new }
+    Array.new(n) { Max2.new }
   end
 
   def create_players(humans:, computers:)
@@ -168,10 +176,8 @@ Please enter #{options.joinor}: "
   end
 
   def board_setup
-    msg = "Please select board size.
-It must be odd and between 3 up to 15: "
-    cond = proc { |choice| choice.odd? && choice >= 3 && choice <= 15 }
-    board_size = ask_int(msg, cond)
+    msg = "Please select board size #{VALID_SIZES.joinor}: "
+    board_size = ask_options(msg, VALID_SIZES.map(&:to_s)).to_i
 
     length = board_size == 3 ? 3 : win_length(board_size)
 
