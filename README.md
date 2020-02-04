@@ -1,6 +1,29 @@
-To play, run `ruby ttt.rb`
+# TTT
 
-## TTTGame class
+To play, run `ruby ttt.rb`. Press <kbd>Ctrl</kbd>/<kbd>Command</kbd> + <kbd>c</kbd> to quit.
+
+This is a terminal based Tic-Tac-Toe game with different playable modes:
+
+	* Human vs Computer
+	* Human vs Human
+	* Computer vs Computer
+	* Custom
+
+The custom modes allows:
+
+	* Board sizes 3, 5, 7, 9, 11, 13, and 15
+	* Players of up 15 (with any combination of Humans and Computers)
+	* Human Players can choose to play any valid symbols
+
+The computer players are implemented with minimax algorithm for game modes with 2 players. For games with more than 2 players, maximax is used.
+
+## Implementation Details
+
+### Game class
+
+The `Game` class is the starting point. It generates presets game modes or prompt the user for custom values. These values are used to initialize `TTTGame` .
+
+### TTTGame class
 Game engine. 
 
 ​	Other game logic are delegated to `Board`, ie, full?, line_formed?, etc
@@ -13,21 +36,18 @@ Game engine.
 
 - protects board from `Players` using other symbols
 
-- FIXME last winning move for computer is displayed too rapidly/or skipped
-
 - TODO suggest early draw, when no win is possible
 
-  
 
-  ### score
+  #### score
 
   Hash of player index to score value
 
-### TTTGame.players
+#### TTTGame.new{players:}
 
-array of `Player` objects index 0..last
+Array of `Player` objects ordered 0..last.
 
-### Game rules and dynamics
+#### Game rules and dynamics
 
 See https://www.gamedev.net/forums/topic/646788-tic-tac-toe-on-5x5-board/
 
@@ -37,7 +57,7 @@ See https://www.gamedev.net/forums/topic/646788-tic-tac-toe-on-5x5-board/
 
 * Temporary solution: Set winning "line" length at `Board#initialize`
 
-## Board class
+### Board class
 
 Game state. It's an n x n matrix of `Squares` numbered 1..n*n. Supports (odd) n x n size from 3 to 15. Supports multiple players.
 
@@ -53,24 +73,24 @@ Uses `Square` class to represent a square. Uses `Line` class to abstract a 'line
 | `Square#symbol` | a marker or an empty space; used for displaying the board |
 | `Player#marker` | a Player marker. e.g. 'X' or 'O'                          |
 
-## Line class
+### Line class
 
 A group of squares, used to abstract a collection of squares.
 
-## Square class
+### Square class
 
 Holds the  Player's marker on the board.
 
 - a String
 - one symbol per player
 
-## Grid class
+### Grid class
 
 Displays the board. It scales with the size of the board.
 
 NOTE: Currently unable to detect the user's terminal size to set maximum board size.
 
-## Player class
+### Player class
 
 Player inspects the board using Board#unmarked_squares.
 
@@ -80,15 +100,15 @@ Player inspects the board using Board#unmarked_squares.
 - ensures unique symbols for each
 - `Player#choose` returns the move
 
-## Human class
+### Human class
 
 Child of Player class. Displays and prompts users for name, choice of symbol, and moves.
 
-## Computer class
+### Computer class
 
 Inherits Player. Set's it's own name and symbol. Able to defend from imminent loss. Able to make a winning move. All other moves are random.
 
-## Analyzing1Computer class
+### Analyzing1Computer class
 
 Inherits Computer. Looks ahead only one move using [maximax strategy](https://cs.stanford.edu/people/eroberts/courses/soco/projects/1998-99/game-theory/Minimax.html). Using the following table to evaluate moves.
 
@@ -106,11 +126,11 @@ Inherits Computer. Looks ahead only one move using [maximax strategy](https://cs
 | `capture_score`       | win                   |                                                              |
 | 0                     | lines already blocked | no use to take that move                                     |
 
-## Max2 class
+### Max2 class
 
 Implements minimax algorithm on 2 player matches. For more players, it reverts back to Analyzing1Computer#choose method
 
-### Minimax
+#### Minimax
 
 Minimax is tricky in many ways.
 
@@ -122,7 +142,7 @@ Minimax is tricky in many ways.
 
 ​	Heuristic: Currently considers only winning, loosing, neutral moves with scores 1,  -1, and 0.
 
-## Utility
+### Utility
 
 Implemented Array#joinor
 
