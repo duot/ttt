@@ -25,13 +25,13 @@ class Game
   def friendly_note
     puts <<_
 
-    Please note that the game display is currently unable to scale with the screen size. Please press Ctrl + c or Cmd + c to terminate.
+    Please note that the game display is currently unable to scale automatically with the screen size. Please press Ctrl/Command + c to terminate.
 
 _
   end
 
   def prompt_options
-    options = %w(1 2 3 4 5 6 7 8)
+    options = %w(1 2 3 4 5 6 7 8 9)
     msg = "What game would you like to play?
     1  human vs computer
     2  human vs human
@@ -194,5 +194,14 @@ It must be between 3 and #{max}: "
 end
 
 if __FILE__ == $PROGRAM_NAME
-  Game.new
+  at_exit do
+    puts
+    puts "The game ended early. Goodbye."
+  end
+
+  begin
+    Game.new
+  rescue Interrupt
+    exit 0
+  end
 end
