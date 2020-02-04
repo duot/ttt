@@ -13,16 +13,22 @@ class Max2 < Analyzing1Computer
   def minimaxing(board)
     @oppo = @@markers.reject { |m| m == marker }.first
 
-    board
-      .unmarked_squares
-      .map { |move| [move, minimax(6, board, move, true)] }
-      .max_by(&:last)
-      .first
+    moves_rank = board
+                 .unmarked_squares
+                 .map { |move| [move, minimax(5, board, move, true)] }
+                 .sort_by(&:last)
+
+    highest_ones(moves_rank).sample.first
   end
 
   private
 
   attr_reader :oppo
+
+  def highest_ones(sorted_move_scores)
+    _, high = sorted_move_scores.last
+    sorted_move_scores.drop_while { |_, v| v != high }
+  end
 
   def minimax(depth, board, move, ismax)
     m = ismax ? marker : oppo
