@@ -80,7 +80,7 @@ Please enter #{options.joinor}: "
 
   def three; init setter(3, 3, 0, 3, nil, 5, { display_delay: 1 }); end
 
-  def humanvhuman; init setter(3, 3, 2, 0, nil, nil); end
+  def humanvhuman; init setter(3, 3, 2, 0, nil, nil, { display_delay: 0 }); end
 
   def cvc; init setter(3, 3, 0, 2, nil, 3, { display_delay: 0.5 }); end
 
