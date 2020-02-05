@@ -1,4 +1,3 @@
-require 'pry'
 require_relative 'board.rb'
 require_relative 'player.rb'
 require_relative 'utility.rb'

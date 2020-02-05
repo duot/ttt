@@ -1,5 +1,3 @@
-require 'pry'
-
 class Grid
   def initialize(flat_matrix, side_len, padding: 1, display_grid_numbers: true)
     @display_grid_numbers = display_grid_numbers
