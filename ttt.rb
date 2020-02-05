@@ -196,7 +196,7 @@ end
 if __FILE__ == $PROGRAM_NAME
   at_exit do
     puts
-    puts "The game ended early. Goodbye."
+    puts "Thank you for playing Tic Tac Toe. Goodbye."
   end
 
   begin

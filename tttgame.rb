@@ -4,6 +4,7 @@ require_relative 'player.rb'
 require_relative 'utility.rb'
 require_relative 'display.rb'
 require_relative 'prompt.rb'
+require_relative 'max2.rb'
 
 class TTTGame
   include Display
@@ -43,7 +44,6 @@ class TTTGame
       display_play_again
       reset
     end
-    display_goodbye
   end
 
   private
@@ -215,5 +215,9 @@ end
 #########   #########   #########
 
 if __FILE__ == $PROGRAM_NAME
-  TTTGame.new.play
+  begin
+    TTTGame.new.play
+  rescue Interrupt
+    exit 0
+  end
 end
