@@ -1,7 +1,5 @@
 # TTT
 
-To play, run `ruby ttt.rb`. Press <kbd>Ctrl</kbd>/<kbd>Command</kbd> + <kbd>c</kbd> to quit.
-
 This is a terminal based Tic-Tac-Toe game with different playable modes:
 
 	* Human vs Computer
@@ -13,9 +11,13 @@ The custom modes allows:
 
 	* Board sizes 3, 5, 7, 9, 11, 13, and 15
 	* Players of up 15 (with any combination of Humans and Computers)
-	* Human Players can choose to play any valid symbols
+	* Human Players can choose any valid symbols
 
 The computer players are implemented with minimax algorithm for game modes with 2 players. For games with more than 2 players, maximax is used.
+
+## Usage
+
+To play, run `ruby ttt.rb`. Press <kbd>Ctrl</kbd>/<kbd>Command</kbd> + <kbd>c</kbd> to quit.
 
 ## Implementation Details
 
@@ -147,3 +149,15 @@ Minimax is tricky in many ways.
 Implemented Array#joinor
 
 Implemented String#parenthesize
+
+## License
+
+[MIT](https://opensource.org/licenses/MIT)
+
+Copyright 2020 [James Duot](https:github.com/duot)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
