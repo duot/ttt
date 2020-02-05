@@ -10,6 +10,8 @@ class TTTGame
   include Display
   include Prompt
 
+  ROUND_PAUSE = 2
+
   def initialize(
     board: Board.new(3, 3),
 
@@ -105,6 +107,8 @@ class TTTGame
   def current_player_moves
     display_player current_player
     player_move current_player
+    clear_screen_and_display_score_and_board
+    sleep(display_delay) if !human_turn?
     @current_player = next_player
   end
 
@@ -144,7 +148,6 @@ class TTTGame
   end
 
   def clear_screen_and_display_score_and_board
-    sleep(display_delay)
     clear
     display_score_and_board
   end
@@ -152,7 +155,7 @@ class TTTGame
   def clear_screen_and_display_score_and_board_and_sleep
     clear
     display_score_and_board
-    sleep 2
+    sleep ROUND_PAUSE
   end
 
   def display_play_again
